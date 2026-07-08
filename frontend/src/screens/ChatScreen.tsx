@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
-import Sidebar from '../components/Sidebar';
 
 type Message = {
   id: string;
@@ -67,7 +66,7 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: Platform.OS === 'web' ? '100vh' : '100%' }}>
+    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: (Platform.OS === 'web' ? '100vh' : '100%') as any }}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView
         className="flex-1"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, ScrollView, Image, ActivityIndicator } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -87,7 +87,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: Platform.OS === 'web' ? '100vh' : '100%' }}>
+    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: (Platform.OS === 'web' ? '100vh' : '100%') as any }}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         

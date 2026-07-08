@@ -132,7 +132,7 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
             </TouchableOpacity>
 
             <TextInput
-              placeholder="Ask anything about your crop..."
+              placeholder="Ask about your crop..."
               placeholderTextColor="#9CA3AF"
               className="flex-1 px-4 py-3.5 text-[15px] text-gray-800 min-h-[48px] max-h-[120px]"
               value={message}
@@ -155,8 +155,8 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
           </View>
 
           {/* Footer Text */}
-          <Text className="text-[10px] text-gray-400 mt-3 px-1">
-            Smart Crop Advisory AI can provide guidance but check field conditions regularly.
+          <Text className="text-[10px] text-gray-400 mt-3 px-1 text-center">
+            AI provides guidance. Always verify field conditions.
           </Text>
         </View>
       </KeyboardAvoidingView>

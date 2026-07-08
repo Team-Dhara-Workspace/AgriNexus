@@ -49,10 +49,10 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
         text: message.trim(),
         sender: 'user',
       };
-      
+
       setMessages(prev => [...prev, userMessage]);
       setMessage('');
-      
+
       // Simulate bot typing and responding
       setTimeout(() => {
         const botMessage: Message = {
@@ -73,7 +73,7 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header */}
-        <View 
+        <View
           className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-10"
           style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20 }}
         >
@@ -100,19 +100,18 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
             </Text>
           </View>
         ) : (
-          <ScrollView 
-            className="flex-1 px-4 pt-4" 
+          <ScrollView
+            className="flex-1 px-4 pt-4"
             ref={scrollViewRef}
             onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
           >
             {messages.map((msg) => (
-              <View 
-                key={msg.id} 
-                className={`mb-4 max-w-[80%] rounded-2xl px-4 py-3 ${
-                  msg.sender === 'user' 
-                    ? 'bg-[#1A744C] self-end rounded-tr-sm' 
+              <View
+                key={msg.id}
+                className={`mb-4 max-w-[80%] rounded-2xl px-4 py-3 ${msg.sender === 'user'
+                    ? 'bg-[#1A744C] self-end rounded-tr-sm'
                     : 'bg-white border border-gray-100 self-start rounded-tl-sm shadow-sm'
-                }`}
+                  }`}
               >
                 <Text className={`text-[15px] ${msg.sender === 'user' ? 'text-white' : 'text-gray-800'}`}>
                   {msg.text}

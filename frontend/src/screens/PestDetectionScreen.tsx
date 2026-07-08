@@ -60,7 +60,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
 
   const handleAnalyze = () => {
     if (!selectedImage && !selectedFileName) return;
-    
+
     setIsAnalyzing(true);
     setDiagnosis(null);
 
@@ -90,9 +90,9 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
     <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: (Platform.OS === 'web' ? '100vh' : '100%') as any }}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        
+
         {/* Header */}
-        <View 
+        <View
           className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-10"
           style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20 }}
         >
@@ -104,7 +104,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
         </View>
 
         <ScrollView className="flex-1 px-4 pt-6">
-          
+
           <Text className="text-[28px] font-extrabold text-gray-900 text-center leading-tight mb-2">
             Identify Crop Issues
           </Text>
@@ -114,15 +114,15 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
 
           {/* Upload Area */}
           <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6 items-center">
-            
+
             {selectedImage ? (
               <View className="w-full relative mb-4">
-                <Image 
-                  source={{ uri: selectedImage }} 
+                <Image
+                  source={{ uri: selectedImage }}
                   className="w-full h-48 rounded-xl"
                   resizeMode="cover"
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="absolute top-2 right-2 bg-white/80 p-2 rounded-full"
                   onPress={handleClear}
                 >
@@ -148,7 +148,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
 
             {!selectedImage && !selectedFileName && (
               <View className="flex-row w-full space-x-3 justify-center gap-3">
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-white border border-gray-200 py-3 rounded-xl items-center flex-row justify-center shadow-sm"
                   onPress={handlePickPhoto}
                 >
@@ -156,7 +156,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                   <Text className="ml-2 font-semibold text-gray-700">Camera</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-white border border-gray-200 py-3 rounded-xl items-center flex-row justify-center shadow-sm"
                   onPress={handlePickDocument}
                 >
@@ -167,7 +167,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
             )}
 
             {(selectedImage || selectedFileName) && !diagnosis && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 className={`w-full py-4 rounded-xl items-center shadow-sm flex-row justify-center ${isAnalyzing ? 'bg-gray-400' : 'bg-[#1A744C]'}`}
                 onPress={handleAnalyze}
                 disabled={isAnalyzing}
@@ -198,7 +198,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
               </View>
 
               <Text className="text-sm font-semibold text-[#18553F] mb-3">Recommended Remedies:</Text>
-              
+
               {diagnosis.remedies.map((remedy, index) => (
                 <View key={index} className="flex-row items-start mb-2">
                   <View className="w-5 h-5 rounded-full bg-[#E6F4FE] items-center justify-center mr-3 mt-0.5">
@@ -211,7 +211,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
               ))}
             </View>
           )}
-          
+
           <View className="h-6" />
         </ScrollView>
       </KeyboardAvoidingView>

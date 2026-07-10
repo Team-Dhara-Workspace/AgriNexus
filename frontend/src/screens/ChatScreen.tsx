@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
@@ -8,6 +8,7 @@ type Message = {
   id: string;
   text: string;
   sender: 'user' | 'bot';
+  isLoading?: boolean;
 };
 
 type ChatScreenProps = {
@@ -42,26 +43,62 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
     Alert.alert("Voice Recording", "Microphone feature is coming soon!");
   };
 
-  const handleSend = () => {
-    if (message.trim().length > 0) {
+  const handleSend = async () => {
+    const trimmedMessage = message.trim();
+    if (trimmedMessage.length > 0) {
+      const userMessageId = Date.now().toString();
       const userMessage: Message = {
-        id: Date.now().toString(),
-        text: message.trim(),
+        id: userMessageId,
+        text: trimmedMessage,
         sender: 'user',
       };
 
       setMessages(prev => [...prev, userMessage]);
       setMessage('');
 
-      // Simulate bot typing and responding
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: "I am an AI assistant for Smart Crop Advisory. I am still under development, but I will soon be able to help you with " + userMessage.text + "!",
-          sender: 'bot',
-        };
-        setMessages(prev => [...prev, botMessage]);
-      }, 1000);
+      // Add a placeholder bot message with loading status
+      const botMessageId = (Date.now() + 1).toString();
+      const botMessagePlaceholder: Message = {
+        id: botMessageId,
+        text: '',
+        sender: 'bot',
+        isLoading: true,
+      };
+      setMessages(prev => [...prev, botMessagePlaceholder]);
+
+      try {
+        const baseUrl = 'http://10.64.192.111:8000';
+        const url = `${baseUrl}/chatbot/chat?query=${encodeURIComponent(trimmedMessage)}`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const processedText = data.response ? data.response.trim() : "Sorry, I received an invalid response.";
+
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === botMessageId
+              ? { ...msg, text: processedText, isLoading: false }
+              : msg
+          )
+        );
+      } catch (err) {
+        console.log('Error fetching response:', err);
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === botMessageId
+              ? {
+                ...msg,
+                text: "Failed to connect to the advisory server. Please ensure the server is running and try again.",
+                isLoading: false
+              }
+              : msg
+          )
+        );
+      }
     }
   };
 
@@ -110,13 +147,19 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
               <View
                 key={msg.id}
                 className={`mb-4 max-w-[80%] rounded-2xl px-4 py-3 ${msg.sender === 'user'
-                    ? 'bg-[#1A744C] self-end rounded-tr-sm'
-                    : 'bg-white border border-gray-100 self-start rounded-tl-sm shadow-sm'
+                  ? 'bg-[#1A744C] self-end rounded-tr-sm'
+                  : 'bg-white border border-gray-100 self-start rounded-tl-sm shadow-sm'
                   }`}
               >
-                <Text className={`text-[15px] ${msg.sender === 'user' ? 'text-white' : 'text-gray-800'}`}>
-                  {msg.text}
-                </Text>
+                {msg.isLoading ? (
+                  <View className="flex-row items-center justify-center py-1.5 px-3">
+                    <ActivityIndicator size="small" color="#1A744C" />
+                  </View>
+                ) : (
+                  <Text className={`text-[15px] ${msg.sender === 'user' ? 'text-white' : 'text-gray-800'}`}>
+                    {msg.text}
+                  </Text>
+                )}
               </View>
             ))}
             {/* Bottom padding to prevent last message hiding behind input */}
@@ -161,9 +204,9 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
           </View>
 
           {/* Footer Text */}
-          <Text className="text-[10px] text-gray-400 mt-3 px-1 text-center">
+          {/* <Text className="text-[10px] text-gray-400 mt-3 px-1 text-center">
             AI provides guidance. Always verify field conditions.
-          </Text>
+          </Text> */}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

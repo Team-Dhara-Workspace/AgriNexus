@@ -125,22 +125,28 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
 
         {/* Bottom Input Area */}
         <View className="px-5 pb-8 pt-2 bg-[#F5FAF6]">
-          <View className="flex-row items-end min-h-[60px] bg-white border border-gray-200 rounded-[30px] pl-5 pr-1.5 py-1.5 shadow-sm relative">
-            <TouchableOpacity onPress={handlePickDocument} className="mb-3">
-              <Feather name="plus" size={22} color="#9CA3AF" />
+          <View className="flex-row items-end min-h-[60px] bg-white border border-gray-200 rounded-[30px] pl-2.5 pr-1.5 py-1.5 shadow-sm relative">
+            <TouchableOpacity
+              onPress={handlePickDocument}
+              className="w-[38px] h-[38px] rounded-full items-center justify-center bg-[#EAF2ED] mb-1.5 active:bg-[#D4E8DC] transition-colors duration-200"
+            >
+              <Feather name="plus" size={20} color="#1A744C" />
             </TouchableOpacity>
 
             <TextInput
               placeholder="Ask about your crop..."
               placeholderTextColor="#9CA3AF"
-              className="flex-1 px-4 py-3.5 text-[15px] text-gray-800 min-h-[48px] max-h-[120px]"
+              className="flex-1 px-3 py-3 text-[15px] text-gray-800 min-h-[44px] max-h-[120px]"
               value={message}
               onChangeText={setMessage}
               multiline={true}
             />
 
-            <TouchableOpacity className="mr-3 mb-3" onPress={handleMicPress}>
-              <Feather name="mic" size={20} color="#9CA3AF" />
+            <TouchableOpacity
+              onPress={handleMicPress}
+              className="w-[38px] h-[38px] rounded-full items-center justify-center bg-[#EAF2ED] mr-2 mb-1.5 active:bg-[#D4E8DC] transition-colors duration-200"
+            >
+              <Feather name="mic" size={18} color="#1A744C" />
             </TouchableOpacity>
 
             <TouchableOpacity

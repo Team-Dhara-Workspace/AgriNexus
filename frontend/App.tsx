@@ -19,18 +19,18 @@ export default function App() {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />
-      
+
       {currentScreen === 'chat' && (
         <ChatScreen onOpenSidebar={() => setIsSidebarOpen(true)} />
       )}
-      
+
       {currentScreen === 'pest' && (
         <PestDetectionScreen onOpenSidebar={() => setIsSidebarOpen(true)} />
       )}
 
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         onNavigate={navigateTo}
         currentScreen={currentScreen}
       />

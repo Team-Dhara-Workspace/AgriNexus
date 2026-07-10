@@ -79,23 +79,23 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
   };
 
   return (
-    <View 
+    <View
       className="absolute top-0 left-0 h-full w-full z-50"
       pointerEvents={isOpen ? 'auto' : 'none'}
       style={{ elevation: 100, zIndex: 100 }}
     >
       {/* Backdrop */}
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View 
+        <Animated.View
           className="absolute top-0 left-0 w-full h-full bg-black"
           style={{ opacity: fadeAnim }}
         />
       </TouchableWithoutFeedback>
 
       {/* Sidebar Content */}
-      <Animated.View 
+      <Animated.View
         className="absolute top-0 left-0 h-full bg-white shadow-xl"
-        style={{ 
+        style={{
           width: SIDEBAR_WIDTH,
           transform: [{ translateX: slideAnim }]
         }}
@@ -112,8 +112,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
           {/* Main Navigation */}
           <View className="px-3 mb-6">
             <Text className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Apps</Text>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               className={`flex-row items-center px-3 py-3 mb-1 rounded-xl transition-colors ${currentScreen === 'chat' ? 'bg-[#E6F4FE]' : 'active:bg-gray-50'}`}
               onPress={() => onNavigate('chat')}
             >
@@ -123,7 +123,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               className={`flex-row items-center px-3 py-3 rounded-xl transition-colors ${currentScreen === 'pest' ? 'bg-[#E6F4FE]' : 'active:bg-gray-50'}`}
               onPress={() => onNavigate('pest')}
             >
@@ -137,34 +137,34 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
           {/* Chat List */}
           <View className="px-3">
             <Text className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Chats</Text>
-          {recentChats.length === 0 ? (
-            <Text className="text-gray-400 text-center mt-10">No recent chats</Text>
-          ) : (
-            recentChats.map((chat) => (
-              <TouchableOpacity 
-                key={chat.id}
-                className="flex-row items-center justify-between p-3 mb-2 rounded-xl active:bg-gray-50 transition-colors"
-                onPress={() => {
-                  // Load chat logic would go here
-                  onClose();
-                }}
-              >
-                <View className="flex-row items-center flex-1 mr-2">
-                  <Feather name="message-square" size={18} color="#1A744C" />
-                  <Text className="text-gray-700 ml-3 text-base" numberOfLines={1}>
-                    {chat.title}
-                  </Text>
-                </View>
-                
-                <TouchableOpacity 
-                  className="p-2"
-                  onPress={() => handleDeleteChat(chat.id, chat.title)}
+            {recentChats.length === 0 ? (
+              <Text className="text-gray-400 text-center mt-10">No recent chats</Text>
+            ) : (
+              recentChats.map((chat) => (
+                <TouchableOpacity
+                  key={chat.id}
+                  className="flex-row items-center justify-between p-3 mb-2 rounded-xl active:bg-gray-50 transition-colors"
+                  onPress={() => {
+                    // Load chat logic would go here
+                    onClose();
+                  }}
                 >
-                  <Feather name="trash-2" size={18} color="#EF4444" />
+                  <View className="flex-row items-center flex-1 mr-2">
+                    <Feather name="message-square" size={18} color="#1A744C" />
+                    <Text className="text-gray-700 ml-3 text-base" numberOfLines={1}>
+                      {chat.title}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    className="p-2"
+                    onPress={() => handleDeleteChat(chat.id, chat.title)}
+                  >
+                    <Feather name="trash-2" size={18} color="#EF4444" />
+                  </TouchableOpacity>
                 </TouchableOpacity>
-              </TouchableOpacity>
-            ))
-          )}
+              ))
+            )}
           </View>
         </ScrollView>
 

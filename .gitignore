@@ -251,3 +251,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local databases and raw data
+backend/db/
+backend/data/
+data/

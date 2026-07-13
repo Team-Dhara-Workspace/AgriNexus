@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, Keyboa
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
+import { BACKEND_URL } from '../config';
 
 type Message = {
   id: string;
@@ -67,8 +68,7 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
       setMessages(prev => [...prev, botMessagePlaceholder]);
 
       try {
-        const baseUrl = 'http://10.64.192.111:8000';
-        const url = `${baseUrl}/chatbot/chat?query=${encodeURIComponent(trimmedMessage)}`;
+        const url = `${BACKEND_URL}/chatbot/chat?query=${encodeURIComponent(trimmedMessage)}`;
 
         const response = await fetch(url);
         if (!response.ok) {

@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { StatusBar as RNStatusBar } from 'react-native';
+import { BACKEND_URL } from '../config';
 
 type PestDetectionScreenProps = {
   onOpenSidebar: () => void;
@@ -14,7 +15,11 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [diagnosis, setDiagnosis] = useState<{ title: string; remedies: string[] } | null>(null);
+  const [diagnosis, setDiagnosis] = useState<{
+    title: string;
+    remedies: string[];
+    annotatedImage?: string | null;
+  } | null>(null);
 
   const handlePickPhoto = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -58,26 +63,62 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
     }
   };
 
-  const handleAnalyze = () => {
-    if (!selectedImage && !selectedFileName) return;
+  const handleAnalyze = async () => {
+    if (!selectedImage) return;
 
     setIsAnalyzing(true);
     setDiagnosis(null);
 
-    // Simulate AI analysis delay
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      setDiagnosis({
-        title: "Early Blight (Alternaria solani)",
-        remedies: [
-          "Remove and destroy infected lower leaves.",
-          "Apply copper-based fungicides or Bacillus subtilis.",
-          "Ensure adequate spacing between plants to improve air circulation.",
-          "Avoid overhead watering; use drip irrigation instead.",
-          "Rotate crops next season."
-        ]
+    try {
+      const formData = new FormData();
+
+      const filename = selectedFileName || 'photo.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(selectedImage);
+        const blob = await response.blob();
+        formData.append('image', blob, filename);
+      } else {
+        formData.append('image', {
+          uri: selectedImage,
+          name: filename,
+          type: type,
+        } as any);
+      }
+
+      const url = `${BACKEND_URL}/disease/path`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
       });
-    }, 2500);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const annotatedImageUri = data.image_base64 || data.image_url;
+        setDiagnosis({
+          title: data.disease,
+          remedies: data.remedies,
+          annotatedImage: annotatedImageUri,
+        });
+      } else {
+        alert(data.error || "Analysis failed.");
+      }
+    } catch (err: any) {
+      console.log('Error analyzing image:', err);
+      alert("Failed to connect to the advisory server. Please ensure the server is running and try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleClear = () => {
@@ -118,7 +159,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
             {selectedImage ? (
               <View className="w-full relative mb-4">
                 <Image
-                  source={{ uri: selectedImage }}
+                  source={{ uri: diagnosis?.annotatedImage || selectedImage }}
                   className="w-full h-48 rounded-xl"
                   resizeMode="cover"
                 />

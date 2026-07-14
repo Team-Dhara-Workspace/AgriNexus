@@ -6,7 +6,7 @@ type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (screen: 'chat' | 'pest') => void;
-  currentScreen: 'chat' | 'pest';
+  currentScreen: 'chat' | 'pest' | 'auth';
 };
 
 type Chat = {

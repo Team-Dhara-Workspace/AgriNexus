@@ -13,9 +13,10 @@ type Message = {
 
 type ChatScreenProps = {
   onOpenSidebar: () => void;
+  onLogout: () => void;
 };
 
-export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
+export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -29,6 +30,7 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
   ];
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
 
   const handlePickDocument = async () => {
     try {
@@ -129,9 +131,9 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
             <Feather name="menu" size={24} color="#18553F" />
           </TouchableOpacity>
           
-          <View className="flex-row items-center relative">
+          <View className="flex-row items-center z-50">
             {/* Language Dropdown */}
-            <View className="mr-3">
+            <View className="mr-3 relative z-50">
               <TouchableOpacity 
                 onPress={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
                 className="flex-row items-center bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"
@@ -173,11 +175,42 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
             </View>
 
             {/* My Account */}
-            <TouchableOpacity>
-              <View className="w-9 h-9 rounded-full bg-[#1A744C] items-center justify-center shadow-sm">
-                <Feather name="user" size={18} color="white" />
-              </View>
-            </TouchableOpacity>
+            <View className="relative z-50">
+              <TouchableOpacity onPress={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}>
+                <View className="w-9 h-9 rounded-full bg-[#1A744C] items-center justify-center shadow-sm">
+                  <Feather name="user" size={18} color="white" />
+                </View>
+              </TouchableOpacity>
+
+              {isAccountDropdownOpen && (
+                <View 
+                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5" 
+                  style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 140 }}
+                >
+                  <TouchableOpacity 
+                    className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center border-b border-gray-50"
+                    onPress={() => {
+                      setIsAccountDropdownOpen(false);
+                      Alert.alert("Settings", "Navigating to settings...");
+                    }}
+                  >
+                    <Feather name="settings" size={16} color="#4B5563" />
+                    <Text className="text-sm text-gray-800 ml-3 font-medium">Settings</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center"
+                    onPress={() => {
+                      setIsAccountDropdownOpen(false);
+                      onLogout();
+                    }}
+                  >
+                    <Feather name="log-out" size={16} color="#EF4444" />
+                    <Text className="text-sm text-red-500 ml-3 font-medium">Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
         </View>
 

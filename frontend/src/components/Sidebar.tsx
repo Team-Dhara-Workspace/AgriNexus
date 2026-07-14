@@ -101,7 +101,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
         }}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100">
+        <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100 bg-white" style={{ zIndex: 50, elevation: 5 }}>
           <Text className="text-xl font-bold text-gray-900">Menu</Text>
           <TouchableOpacity onPress={onClose} className="p-1">
             <Feather name="x" size={24} color="#6B7280" />
@@ -168,16 +168,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
           </View>
         </ScrollView>
 
-        {/* Account Footer */}
-        <TouchableOpacity className="flex-row items-center px-6 py-6 border-t border-gray-100 bg-gray-50">
-          <View className="w-10 h-10 rounded-full bg-[#1A744C] items-center justify-center">
-            <Feather name="user" size={20} color="white" />
-          </View>
-          <View className="ml-3">
-            <Text className="text-gray-900 font-semibold text-base">My Account</Text>
-            <Text className="text-gray-500 text-sm">Farm Details & Settings</Text>
-          </View>
-        </TouchableOpacity>
       </Animated.View>
     </View>
   );

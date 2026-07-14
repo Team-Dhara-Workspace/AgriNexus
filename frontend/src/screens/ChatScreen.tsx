@@ -20,6 +20,16 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Language state
+  const languages = [
+    { id: 'en', name: 'English', native: 'English' },
+    { id: 'ta', name: 'Tamil', native: 'தமிழ்' },
+    { id: 'te', name: 'Telugu', native: 'తెలుగు' },
+    { id: 'hi', name: 'Hindi', native: 'हिंदी' }
+  ];
+  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+
   const handlePickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -112,14 +122,63 @@ export default function ChatScreen({ onOpenSidebar }: ChatScreenProps) {
       >
         {/* Header */}
         <View
-          className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-10"
-          style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20 }}
+          className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-50"
+          style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20, zIndex: 50, elevation: 5 }}
         >
           <TouchableOpacity onPress={onOpenSidebar}>
             <Feather name="menu" size={24} color="#18553F" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-[#18553F]">Smart Crop Advisory</Text>
-          <View style={{ width: 24 }} />
+          
+          <View className="flex-row items-center relative">
+            {/* Language Dropdown */}
+            <View className="mr-3">
+              <TouchableOpacity 
+                onPress={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className="flex-row items-center bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"
+              >
+                <Ionicons name="language" size={16} color="#4B5563" />
+                <Text className="text-sm text-gray-800 mx-2 font-semibold">{selectedLanguage.native}</Text>
+                <Feather name={isLangDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#4B5563" />
+              </TouchableOpacity>
+
+              {isLangDropdownOpen && (
+                <View 
+                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5" 
+                  style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 140 }}
+                >
+                  {languages.map((lang) => (
+                    <TouchableOpacity 
+                      key={lang.id} 
+                      className={`px-4 py-3 bg-white active:bg-gray-50 flex-row items-center justify-between border-b border-gray-50 last:border-b-0 ${selectedLanguage.id === lang.id ? 'bg-[#E6F4FE]/50' : ''}`}
+                      onPress={() => {
+                        setSelectedLanguage(lang);
+                        setIsLangDropdownOpen(false);
+                      }}
+                    >
+                      <View>
+                        <Text className={`text-sm ${selectedLanguage.id === lang.id ? 'text-[#18553F] font-bold' : 'text-gray-800 font-medium'}`}>
+                          {lang.native}
+                        </Text>
+                        {lang.id !== 'en' && (
+                          <Text className="text-[11px] text-gray-500 mt-0.5">{lang.name}</Text>
+                        )}
+                      </View>
+                      {selectedLanguage.id === lang.id && (
+                        <Feather name="check" size={16} color="#18553F" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* My Account */}
+            <TouchableOpacity>
+              <View className="w-9 h-9 rounded-full bg-[#1A744C] items-center justify-center shadow-sm">
+                <Feather name="user" size={18} color="white" />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Main Content Area */}

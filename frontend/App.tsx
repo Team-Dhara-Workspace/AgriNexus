@@ -5,8 +5,13 @@ import ChatScreen from './src/screens/ChatScreen';
 import PestDetectionScreen from './src/screens/PestDetectionScreen';
 import Sidebar from './src/components/Sidebar';
 import AuthScreen from './src/screens/AuthScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import MarketScreen from './src/screens/MarketScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import ConnectScreen from './src/screens/ConnectScreen';
+import BottomNavbar from './src/components/BottomNavbar';
 
-export type ScreenType = 'chat' | 'pest' | 'auth';
+export type ScreenType = 'chat' | 'pest' | 'auth' | 'home' | 'market' | 'profile' | 'connect';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('auth');
@@ -22,7 +27,7 @@ export default function App() {
       <StatusBar style="dark" />
 
       {currentScreen === 'auth' && (
-        <AuthScreen onLoginSuccess={() => setCurrentScreen('chat')} />
+        <AuthScreen onLoginSuccess={() => setCurrentScreen('home')} />
       )}
 
       {currentScreen === 'chat' && (
@@ -36,13 +41,35 @@ export default function App() {
         <PestDetectionScreen onOpenSidebar={() => setIsSidebarOpen(true)} />
       )}
 
+      {currentScreen === 'home' && (
+        <HomeScreen onNavigate={navigateTo} onLogout={() => setCurrentScreen('auth')} />
+      )}
+
+      {currentScreen === 'market' && (
+        <MarketScreen />
+      )}
+
+      {currentScreen === 'profile' && (
+        <ProfileScreen />
+      )}
+
+      {currentScreen === 'connect' && (
+        <ConnectScreen />
+      )}
+
       {currentScreen !== 'auth' && (
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onNavigate={navigateTo as any}
-          currentScreen={currentScreen}
-        />
+        <>
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            onNavigate={navigateTo}
+            currentScreen={currentScreen}
+          />
+          <BottomNavbar 
+            currentScreen={currentScreen} 
+            onNavigate={navigateTo} 
+          />
+        </>
       )}
     </View>
   );

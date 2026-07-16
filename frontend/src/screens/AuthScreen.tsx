@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, StatusBar as RNStatusBar, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, StatusBar as RNStatusBar, Animated, Alert, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { BACKEND_URL } from '../config';
 
 type AuthScreenProps = {
   onLoginSuccess: () => void;
@@ -56,10 +57,75 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {
-    // Basic validation could go here
-    onLoginSuccess();
+  const handleSubmit = async () => {
+    // Basic inputs verification
+    if (isLogin) {
+      if (!email.trim() || !password) {
+        Alert.alert('Validation Error', 'Please enter both email/username and password');
+        return;
+      }
+    } else {
+      if (!username.trim() || !email.trim() || !password || !confirmPassword) {
+        Alert.alert('Validation Error', 'All fields are required');
+        return;
+      }
+      if (password !== confirmPassword) {
+        Alert.alert('Validation Error', 'Passwords do not match');
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
+    try {
+      const endpoint = isLogin ? `${BACKEND_URL}/users/login/` : `${BACKEND_URL}/users/signup/`;
+      const body = isLogin 
+        ? { email_or_username: email.trim(), password }
+        : { username: username.trim(), email: email.trim(), password, confirm_password: confirmPassword };
+
+      console.log(`Sending authentication request to: ${endpoint}`, body);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (err) {
+        console.error('Failed to parse JSON response:', text);
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
+
+      if (response.status >= 200 && response.status < 300 && result.success) {
+        if (isLogin) {
+          Alert.alert('Success', 'Logged in successfully!');
+          onLoginSuccess();
+        } else {
+          Alert.alert('Success', 'Registered successfully! Please log in.', [
+            { text: 'OK', onPress: () => setIsLogin(true) }
+          ]);
+          // Clear password fields on successful sign up
+          setPassword('');
+          setConfirmPassword('');
+        }
+      } else {
+        const errMsg = result.error || 'Something went wrong. Please check your credentials.';
+        Alert.alert('Authentication Failed', errMsg);
+      }
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      Alert.alert('Network Error', error.message || 'Unable to connect to server. Please ensure the backend is running.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -180,12 +246,17 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               )}
 
               <TouchableOpacity
-                className="bg-[#1A744C] rounded-xl py-3.5 items-center justify-center shadow-sm mt-3 active:bg-[#135939] transition-colors"
+                className={`bg-[#1A744C] rounded-xl py-3.5 items-center justify-center shadow-sm mt-3 active:bg-[#135939] transition-colors ${isLoading ? 'opacity-70' : ''}`}
                 onPress={handleSubmit}
+                disabled={isLoading}
               >
-                <Text className="text-white text-lg font-bold">
-                  {isLogin ? 'Login' : 'Sign Up'}
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text className="text-white text-lg font-bold">
+                    {isLogin ? 'Login' : 'Sign Up'}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
 

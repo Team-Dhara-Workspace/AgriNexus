@@ -16,9 +16,9 @@ if not groq_api_key:
     raise ValueError("GROQ_API_KEY not found in .env file.")
 # Create your views here.
 
-# embedding_manager = EmbeddingManager()
-# vector_store = VectorStore()
-# retriver = RAGRetriver(vector_store=vector_store, embedding_manager=embedding_manager)
+embedding_manager = EmbeddingManager()
+vector_store = VectorStore()
+retriver = RAGRetriver(vector_store=vector_store, embedding_manager=embedding_manager)
 
 llm=ChatGroq(groq_api_key=groq_api_key,model_name="llama-3.1-8b-instant",temperature=0.1,max_tokens=1024)
 

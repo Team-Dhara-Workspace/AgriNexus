@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, Dimensions, TouchableWithoutFeedback, Alert, ScrollView } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 
+import { ScreenType } from '../../App';
+
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (screen: 'chat' | 'pest') => void;
-  currentScreen: 'chat' | 'pest';
+  onNavigate: (screen: ScreenType) => void;
+  currentScreen: ScreenType;
 };
 
 type Chat = {
@@ -101,7 +103,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
         }}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100">
+        <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100 bg-white" style={{ zIndex: 50, elevation: 5 }}>
           <Text className="text-xl font-bold text-gray-900">Menu</Text>
           <TouchableOpacity onPress={onClose} className="p-1">
             <Feather name="x" size={24} color="#6B7280" />
@@ -109,30 +111,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
         </View>
 
         <ScrollView className="flex-1 pt-4">
-          {/* Main Navigation */}
-          <View className="px-3 mb-6">
-            <Text className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Apps</Text>
-
-            <TouchableOpacity
-              className={`flex-row items-center px-3 py-3 mb-1 rounded-xl transition-colors ${currentScreen === 'chat' ? 'bg-[#E6F4FE]' : 'active:bg-gray-50'}`}
-              onPress={() => onNavigate('chat')}
-            >
-              <Feather name="message-circle" size={20} color={currentScreen === 'chat' ? '#18553F' : '#6B7280'} />
-              <Text className={`ml-3 text-base ${currentScreen === 'chat' ? 'text-[#18553F] font-bold' : 'text-gray-700'}`}>
-                Chat Assistant
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className={`flex-row items-center px-3 py-3 rounded-xl transition-colors ${currentScreen === 'pest' ? 'bg-[#E6F4FE]' : 'active:bg-gray-50'}`}
-              onPress={() => onNavigate('pest')}
-            >
-              <Feather name="target" size={20} color={currentScreen === 'pest' ? '#18553F' : '#6B7280'} />
-              <Text className={`ml-3 text-base ${currentScreen === 'pest' ? 'text-[#18553F] font-bold' : 'text-gray-700'}`}>
-                Pest & Disease Detection
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Chat List */}
           <View className="px-3">
@@ -168,16 +146,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate, currentScreen }: 
           </View>
         </ScrollView>
 
-        {/* Account Footer */}
-        <TouchableOpacity className="flex-row items-center px-6 py-6 border-t border-gray-100 bg-gray-50">
-          <View className="w-10 h-10 rounded-full bg-[#1A744C] items-center justify-center">
-            <Feather name="user" size={20} color="white" />
-          </View>
-          <View className="ml-3">
-            <Text className="text-gray-900 font-semibold text-base">My Account</Text>
-            <Text className="text-gray-500 text-sm">Farm Details & Settings</Text>
-          </View>
-        </TouchableOpacity>
       </Animated.View>
     </View>
   );

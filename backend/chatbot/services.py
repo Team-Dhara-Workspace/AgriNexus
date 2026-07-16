@@ -70,10 +70,10 @@ def split_documents(documents,chunk_size=400,chunk_overlap=50):
 
 
 
-### Embedding Manager Class ( Generate embeddings for plain text )
+### Embedding Manager Class ( Generate embeddings for plain text ) BAAI/bge-small-en-v1.5
 class EmbeddingManager:
 
-    def __init__(self, model_name:str="BAAI/bge-small-en-v1.5"):
+    def __init__(self, model_name:str="all-MiniLM-L6-v2"):
 
         self.model_name = model_name
         self.model = None 

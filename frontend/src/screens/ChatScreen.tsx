@@ -4,6 +4,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
 import { BACKEND_URL } from '../config';
+import { renderFormattedMessage } from '../utils/markdown';
 
 type Message = {
   id: string;
@@ -248,9 +249,9 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
                     <ActivityIndicator size="small" color="#1A744C" />
                   </View>
                 ) : (
-                  <Text className={`text-[15px] ${msg.sender === 'user' ? 'text-white' : 'text-gray-800'}`}>
-                    {msg.text}
-                  </Text>
+                  <View className="flex-col">
+                    {renderFormattedMessage(msg.text, msg.sender === 'user')}
+                  </View>
                 )}
               </View>
             ))}

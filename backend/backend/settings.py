@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'chatbot',
     'disease',
+    'users',
 ]
 
 MIDDLEWARE = [

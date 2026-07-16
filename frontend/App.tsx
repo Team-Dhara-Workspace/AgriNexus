@@ -10,6 +10,7 @@ import MarketScreen from './src/screens/MarketScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ConnectScreen from './src/screens/ConnectScreen';
 import BottomNavbar from './src/components/BottomNavbar';
+import { BACKEND_URL } from './src/config';
 
 export type ScreenType = 'chat' | 'pest' | 'auth' | 'home' | 'market' | 'profile' | 'connect';
 
@@ -20,6 +21,27 @@ export default function App() {
   const navigateTo = (screen: ScreenType) => {
     setCurrentScreen(screen);
     setIsSidebarOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/users/logout/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await response.json();
+      if (result.success) {
+        console.log('Logged out successfully from backend');
+      } else {
+        console.warn('Backend logout failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error logging out from backend:', error);
+    } finally {
+      setCurrentScreen('auth');
+    }
   };
 
   return (
@@ -33,7 +55,7 @@ export default function App() {
       {currentScreen === 'chat' && (
         <ChatScreen 
           onOpenSidebar={() => setIsSidebarOpen(true)} 
-          onLogout={() => setCurrentScreen('auth')}
+          onLogout={handleLogout}
         />
       )}
 
@@ -42,7 +64,7 @@ export default function App() {
       )}
 
       {currentScreen === 'home' && (
-        <HomeScreen onNavigate={navigateTo} onLogout={() => setCurrentScreen('auth')} />
+        <HomeScreen onNavigate={navigateTo} onLogout={handleLogout} />
       )}
 
       {currentScreen === 'market' && (

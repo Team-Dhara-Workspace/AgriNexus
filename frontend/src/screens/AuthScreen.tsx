@@ -80,49 +80,28 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     setIsLoading(true);
 
     try {
-      const endpoint = isLogin ? `${BACKEND_URL}/users/login/` : `${BACKEND_URL}/users/signup/`;
-      const body = isLogin 
-        ? { email_or_username: email.trim(), password }
-        : { username: username.trim(), email: email.trim(), password, confirm_password: confirmPassword };
+      // MOCK LOGIN IMPLEMENTATION
+      console.log('Mocking authentication request');
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network request
 
-      console.log(`Sending authentication request to: ${endpoint}`, body);
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      const text = await response.text();
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch (err) {
-        console.error('Failed to parse JSON response:', text);
-        throw new Error('Server returned an invalid response. Please try again.');
-      }
-
-      if (response.status >= 200 && response.status < 300 && result.success) {
-        if (isLogin) {
+      if (isLogin) {
+        if (email.trim().toLowerCase() === 'admin' && password === 'admin') {
           Alert.alert('Success', 'Logged in successfully!');
           onLoginSuccess();
         } else {
-          Alert.alert('Success', 'Registered successfully! Please log in.', [
-            { text: 'OK', onPress: () => setIsLogin(true) }
-          ]);
-          // Clear password fields on successful sign up
-          setPassword('');
-          setConfirmPassword('');
+          Alert.alert('Authentication Failed', 'For mock login, please use "admin" for both username and password.');
         }
       } else {
-        const errMsg = result.error || 'Something went wrong. Please check your credentials.';
-        Alert.alert('Authentication Failed', errMsg);
+        Alert.alert('Success', 'Mock registered successfully! Please log in.', [
+          { text: 'OK', onPress: () => setIsLogin(true) }
+        ]);
+        // Clear password fields on successful sign up
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      Alert.alert('Network Error', error.message || 'Unable to connect to server. Please ensure the backend is running.');
+      Alert.alert('Error', error.message);
     } finally {
       setIsLoading(false);
     }

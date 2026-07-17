@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SafeAreaView, Platform, StatusBar as RNStatusBar, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, SafeAreaView, Platform, StatusBar as RNStatusBar, ScrollView, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { ScreenType } from '../../App';
+import { fetchWeatherData, WeatherData, getIoniconsName } from '../utils/weather';
 
 type HomeScreenProps = {
   onNavigate: (screen: ScreenType) => void;
@@ -11,8 +13,36 @@ type HomeScreenProps = {
 export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState<string>('Detecting Location...');
+
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      setWeatherLoading(true);
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setWeatherError('Permission to access location was denied');
+          setWeatherLoading(false);
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        const data = await fetchWeatherData(location.coords.latitude, location.coords.longitude);
+        setWeatherData(data);
+        setLocationName(data.name || 'Your Location');
+      } catch (error: any) {
+        setWeatherError(error.message || 'Could not fetch weather');
+      } finally {
+        setWeatherLoading(false);
+      }
+    })();
+  }, []);
 
   const insights = [
     { id: '1', title: 'Market Insight', desc: 'Tomato prices are up 15% this week in your region.', color: '#F0FDF4', iconColor: '#10B981', icon: 'trending-up' },
@@ -100,35 +130,54 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
 
         {/* Weather Component */}
         <View className="px-6 mb-8 mt-2">
-          <View className="bg-gradient-to-br from-[#1A744C] to-[#0F4A30] rounded-3xl p-6 shadow-lg relative overflow-hidden" style={{ backgroundColor: '#1A744C' }}>
+          <View className="bg-gradient-to-br from-[#1A744C] to-[#0F4A30] rounded-3xl p-6 shadow-lg relative overflow-hidden" style={{ backgroundColor: '#1A744C', minHeight: 180, justifyContent: 'center' }}>
             <View className="absolute -right-10 -top-10 opacity-10">
               <Feather name="sun" size={160} color="white" />
             </View>
             
-            <View className="flex-row justify-between items-start">
-              <View>
-                <Text className="text-white/80 font-medium mb-2 flex-row items-center">
-                  <Feather name="map-pin" size={12} color="rgba(255,255,255,0.8)" /> Field A, Chennai
-                </Text>
-                <Text className="text-5xl font-extrabold text-white mb-2">28°<Text className="text-2xl font-normal">C</Text></Text>
-                <Text className="text-white text-base font-medium">Partly Cloudy</Text>
-              </View>
-              
-              <View className="bg-white/20 rounded-2xl p-4 backdrop-blur-md">
-                <Ionicons name="partly-sunny" size={36} color="white" />
-              </View>
-            </View>
-            
-            <View className="flex-row items-center mt-6 pt-5 border-t border-white/20">
-              <View className="flex-row items-center mr-6">
-                <Feather name="droplet" size={14} color="rgba(255,255,255,0.8)" />
-                <Text className="text-white/80 ml-2 text-sm font-medium">Humidity 65%</Text>
-              </View>
-              <View className="flex-row items-center">
-                <Feather name="wind" size={14} color="rgba(255,255,255,0.8)" />
-                <Text className="text-white/80 ml-2 text-sm font-medium">Wind 12 km/h</Text>
-              </View>
-            </View>
+            {weatherLoading ? (
+               <ActivityIndicator size="large" color="#ffffff" />
+            ) : weatherError ? (
+               <View className="items-center">
+                 <Feather name="alert-circle" size={24} color="#FCA5A5" />
+                 <Text className="text-red-200 mt-2 text-center">{weatherError}</Text>
+               </View>
+            ) : weatherData ? (
+               <>
+                <View className="flex-row justify-between items-start">
+                  <View>
+                    <Text className="text-white/80 font-medium mb-2 flex-row items-center">
+                      <Feather name="map-pin" size={12} color="rgba(255,255,255,0.8)" /> {locationName}
+                    </Text>
+                    <Text className="text-5xl font-extrabold text-white mb-2">
+                      {Math.round(weatherData.main.temp)}°<Text className="text-2xl font-normal">C</Text>
+                    </Text>
+                    <Text className="text-white text-base font-medium capitalize">
+                      {weatherData.weather[0]?.description || 'Clear'}
+                    </Text>
+                  </View>
+                  
+                  <View className="bg-white/20 rounded-2xl p-4 backdrop-blur-md">
+                    <Ionicons 
+                       name={getIoniconsName(weatherData.weather[0]?.id || 800, weatherData.weather[0]?.icon || '01d') as any} 
+                       size={36} 
+                       color="white" 
+                    />
+                  </View>
+                </View>
+                
+                <View className="flex-row items-center mt-6 pt-5 border-t border-white/20">
+                  <View className="flex-row items-center mr-6">
+                    <Feather name="droplet" size={14} color="rgba(255,255,255,0.8)" />
+                    <Text className="text-white/80 ml-2 text-sm font-medium">Humidity {weatherData.main.humidity}%</Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    <Feather name="wind" size={14} color="rgba(255,255,255,0.8)" />
+                    <Text className="text-white/80 ml-2 text-sm font-medium">Wind {Math.round(weatherData.wind.speed * 3.6)} km/h</Text>
+                  </View>
+                </View>
+               </>
+            ) : null}
           </View>
         </View>
 

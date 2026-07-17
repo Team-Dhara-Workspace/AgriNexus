@@ -21,7 +21,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     growAnim.setValue(0);
     rotateAnim.setValue(-1);
     slideAnim.setValue(isLogin ? -150 : 150); // Start off-screen horizontally
-    
+
     // Play farming grow & move animation
     Animated.parallel([
       Animated.spring(growAnim, {
@@ -80,12 +80,32 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     setIsLoading(true);
 
     try {
-      // MOCK LOGIN IMPLEMENTATION
-      console.log('Mocking authentication request');
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network request
+      const endpoint = isLogin ? `${BACKEND_URL}/users/login/` : `${BACKEND_URL}/users/signup/`;
+      const body = isLogin
+        ? { email_or_username: email.trim(), password }
+        : { username: username.trim(), email: email.trim(), password, confirm_password: confirmPassword };
 
-      if (isLogin) {
-        if (email.trim().toLowerCase() === 'admin' && password === 'admin') {
+      console.log(`Sending authentication request to: ${endpoint}`);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (err) {
+        console.error('Failed to parse JSON response:', text);
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
+
+      if (response.status >= 200 && response.status < 300 && result.success) {
+        if (isLogin) {
           Alert.alert('Success', 'Logged in successfully!');
           onLoginSuccess();
         } else {
@@ -119,14 +139,14 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           <View className="flex-1 justify-center px-8 py-6">
             {/* Header section */}
             <View className="items-center mb-6">
-              <Animated.View 
+              <Animated.View
                 className="w-16 h-16 bg-[#1A744C] rounded-2xl items-center justify-center mb-4 shadow-md"
-                style={{ 
+                style={{
                   transform: [
                     { translateX: slideAnim },
                     { scale: growAnim },
                     { rotate: spin }
-                  ] 
+                  ]
                 }}
               >
                 <Ionicons name="leaf" size={32} color="white" />
@@ -135,15 +155,15 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 {isLogin ? 'Welcome Back!' : 'Create Account'}
               </Text>
               <Text className="text-base text-gray-500 text-center">
-                {isLogin 
-                  ? 'Sign in to access your crop advisory dashboard' 
+                {isLogin
+                  ? 'Sign in to access your crop advisory dashboard'
                   : 'Join AgriNexus to empower your farming journey'}
               </Text>
             </View>
 
             {/* Form section */}
             <View className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              
+
               {!isLogin && (
                 <View className="mb-3">
                   <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">Username</Text>

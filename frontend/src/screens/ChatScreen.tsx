@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
 import { BACKEND_URL } from '../config';
 import { renderFormattedMessage } from '../utils/markdown';
+import { UserType } from './AuthScreen';
 
 type Message = {
   id: string;
@@ -16,11 +17,23 @@ type Message = {
 type ChatScreenProps = {
   onOpenSidebar: () => void;
   onLogout: () => void;
+  user?: UserType | null;
+  currentSessionId: string | null;
+  setCurrentSessionId: (id: string | null) => void;
+  onRefreshSessions?: () => void;
 };
 
-export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps) {
+export default function ChatScreen({
+  onOpenSidebar,
+  onLogout,
+  user,
+  currentSessionId,
+  setCurrentSessionId,
+  onRefreshSessions
+}: ChatScreenProps) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Language state
@@ -33,6 +46,39 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+
+  // Load session messages when currentSessionId changes
+  useEffect(() => {
+    if (currentSessionId && user?.id) {
+      loadSessionMessages(currentSessionId);
+    } else {
+      setMessages([]);
+    }
+  }, [currentSessionId, user?.id]);
+
+  const loadSessionMessages = async (sessionId: string) => {
+    if (!user?.id) return;
+    setIsLoadingHistory(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/chatbot/sessions/${sessionId}/messages?user_id=${user.id}`);
+      const data = await response.json();
+      if (data.success && data.messages) {
+        const formattedMsgs: Message[] = data.messages.map((m: any) => ({
+          id: m.id,
+          text: m.text,
+          sender: m.sender,
+          isLoading: false
+        }));
+        setMessages(formattedMsgs);
+      } else {
+        setMessages([]);
+      }
+    } catch (err) {
+      console.error("Error loading chat history:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handlePickDocument = async () => {
     try {
@@ -59,59 +105,90 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
-    if (trimmedMessage.length > 0) {
-      const userMessageId = Date.now().toString();
-      const userMessage: Message = {
-        id: userMessageId,
-        text: trimmedMessage,
-        sender: 'user',
-      };
+    if (trimmedMessage.length === 0) return;
 
-      setMessages(prev => [...prev, userMessage]);
-      setMessage('');
+    if (!user?.id) {
+      Alert.alert("Authentication Required", "Please log in to start chatting.");
+      return;
+    }
 
-      // Add a placeholder bot message with loading status
-      const botMessageId = (Date.now() + 1).toString();
-      const botMessagePlaceholder: Message = {
-        id: botMessageId,
-        text: '',
-        sender: 'bot',
-        isLoading: true,
-      };
-      setMessages(prev => [...prev, botMessagePlaceholder]);
+    const userMessageId = Date.now().toString();
+    const userMessage: Message = {
+      id: userMessageId,
+      text: trimmedMessage,
+      sender: 'user',
+    };
 
-      try {
-        const url = `${BACKEND_URL}/chatbot/chat?query=${encodeURIComponent(trimmedMessage)}`;
+    setMessages(prev => [...prev, userMessage]);
+    setMessage('');
 
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    // Add placeholder bot message with loading status
+    const botMessageId = (Date.now() + 1).toString();
+    const botMessagePlaceholder: Message = {
+      id: botMessageId,
+      text: '',
+      sender: 'bot',
+      isLoading: true,
+    };
+    setMessages(prev => [...prev, botMessagePlaceholder]);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/chatbot/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: trimmedMessage,
+          session_id: currentSessionId,
+          user_id: user.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const processedText = data.response ? data.response.trim() : "Sorry, I received an empty response.";
+
+        // Update active session ID if a new session was created on backend
+        if (data.session_id && data.session_id !== currentSessionId) {
+          setCurrentSessionId(data.session_id);
         }
-
-        const data = await response.json();
-        const processedText = data.response ? data.response.trim() : "Sorry, I received an invalid response.";
 
         setMessages(prev =>
           prev.map(msg =>
             msg.id === botMessageId
-              ? { ...msg, text: processedText, isLoading: false }
+              ? { ...msg, id: data.message_id || botMessageId, text: processedText, isLoading: false }
               : msg
           )
         );
-      } catch (err) {
-        console.log('Error fetching response:', err);
+
+        if (onRefreshSessions) {
+          onRefreshSessions();
+        }
+      } else {
+        const errorMsg = data.error || "Failed to generate answer from advisory server.";
         setMessages(prev =>
           prev.map(msg =>
             msg.id === botMessageId
-              ? {
-                ...msg,
-                text: "Failed to connect to the advisory server. Please ensure the server is running and try again.",
-                isLoading: false
-              }
+              ? { ...msg, text: `Error: ${errorMsg}`, isLoading: false }
               : msg
           )
         );
       }
+    } catch (err) {
+      console.error('Error fetching response:', err);
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === botMessageId
+            ? {
+                ...msg,
+                text: "Failed to connect to the advisory server. Please check your connection and try again.",
+                isLoading: false
+              }
+            : msg
+        )
+      );
     }
   };
 
@@ -128,14 +205,24 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
           className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-50"
           style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20, zIndex: 50, elevation: 5 }}
         >
-          <TouchableOpacity onPress={onOpenSidebar}>
-            <Feather name="menu" size={24} color="#18553F" />
-          </TouchableOpacity>
-          
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={onOpenSidebar} className="mr-3">
+              <Feather name="menu" size={24} color="#18553F" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setCurrentSessionId(null)}
+              className="flex-row items-center bg-[#EAF2ED] px-3 py-1.5 rounded-full"
+            >
+              <Feather name="plus" size={16} color="#1A744C" />
+              <Text className="text-xs font-semibold text-[#1A744C] ml-1">New Chat</Text>
+            </TouchableOpacity>
+          </View>
+
           <View className="flex-row items-center z-50">
             {/* Language Dropdown */}
             <View className="mr-3 relative z-50">
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
                 className="flex-row items-center bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"
               >
@@ -145,13 +232,13 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
               </TouchableOpacity>
 
               {isLangDropdownOpen && (
-                <View 
-                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5" 
+                <View
+                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5"
                   style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 140 }}
                 >
                   {languages.map((lang) => (
-                    <TouchableOpacity 
-                      key={lang.id} 
+                    <TouchableOpacity
+                      key={lang.id}
                       className={`px-4 py-3 bg-white active:bg-gray-50 flex-row items-center justify-between border-b border-gray-50 last:border-b-0 ${selectedLanguage.id === lang.id ? 'bg-[#E6F4FE]/50' : ''}`}
                       onPress={() => {
                         setSelectedLanguage(lang);
@@ -184,11 +271,22 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
               </TouchableOpacity>
 
               {isAccountDropdownOpen && (
-                <View 
-                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5" 
-                  style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 140 }}
+                <View
+                  className="absolute top-11 right-0 bg-white rounded-xl border border-gray-100 py-1.5"
+                  style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 160 }}
                 >
-                  <TouchableOpacity 
+                  {user && (
+                    <View className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <Text className="text-xs font-bold text-gray-800" numberOfLines={1}>
+                        {user.username}
+                      </Text>
+                      <Text className="text-[11px] text-gray-500" numberOfLines={1}>
+                        {user.email}
+                      </Text>
+                    </View>
+                  )}
+
+                  <TouchableOpacity
                     className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center border-b border-gray-50"
                     onPress={() => {
                       setIsAccountDropdownOpen(false);
@@ -199,7 +297,7 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
                     <Text className="text-sm text-gray-800 ml-3 font-medium">Settings</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center"
                     onPress={() => {
                       setIsAccountDropdownOpen(false);
@@ -216,10 +314,13 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
         </View>
 
         {/* Main Content Area */}
-        {messages.length === 0 ? (
+        {isLoadingHistory ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#1A744C" />
+            <Text className="text-sm text-gray-500 mt-2">Loading chat history...</Text>
+          </View>
+        ) : messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6" style={{ flexGrow: 1 }}>
-
-
             {/* Heading */}
             <Text className="text-[28px] font-extrabold text-gray-900 text-center leading-tight">
               How can I help your{"\n"}farm today?
@@ -255,7 +356,6 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
                 )}
               </View>
             ))}
-            {/* Bottom padding to prevent last message hiding behind input */}
             <View className="h-6" />
           </ScrollView>
         )}
@@ -295,11 +395,6 @@ export default function ChatScreen({ onOpenSidebar, onLogout }: ChatScreenProps)
               <Ionicons name="send" size={20} color="white" className="ml-1" />
             </TouchableOpacity>
           </View>
-
-          {/* Footer Text */}
-          {/* <Text className="text-[10px] text-gray-400 mt-3 px-1 text-center">
-            AI provides guidance. Always verify field conditions.
-          </Text> */}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

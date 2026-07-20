@@ -4,8 +4,14 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { BACKEND_URL } from '../config';
 
+export type UserType = {
+  id: number;
+  username: string;
+  email: string;
+};
+
 type AuthScreenProps = {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (user: UserType) => void;
 };
 
 export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
@@ -107,7 +113,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       if (response.status >= 200 && response.status < 300 && result.success) {
         if (isLogin) {
           Alert.alert('Success', 'Logged in successfully!');
-          onLoginSuccess();
+          onLoginSuccess(result.user);
         } else {
           Alert.alert('Authentication Failed', 'For mock login, please use "admin" for both username and password.');
         }

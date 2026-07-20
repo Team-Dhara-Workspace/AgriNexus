@@ -115,19 +115,20 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           Alert.alert('Success', 'Logged in successfully!');
           onLoginSuccess(result.user);
         } else {
-          Alert.alert('Authentication Failed', 'For mock login, please use "admin" for both username and password.');
+          Alert.alert('Success', result.message || 'Account created successfully! Please log in.', [
+            { text: 'OK', onPress: () => setIsLogin(true) }
+          ]);
+          // Clear password fields on successful sign up
+          setPassword('');
+          setConfirmPassword('');
         }
       } else {
-        Alert.alert('Success', 'Mock registered successfully! Please log in.', [
-          { text: 'OK', onPress: () => setIsLogin(true) }
-        ]);
-        // Clear password fields on successful sign up
-        setPassword('');
-        setConfirmPassword('');
+        const errorMessage = result?.error || result?.message || 'Authentication failed. Please try again.';
+        Alert.alert('Authentication Error', errorMessage);
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Unable to connect to server. Please check your connection.');
     } finally {
       setIsLoading(false);
     }

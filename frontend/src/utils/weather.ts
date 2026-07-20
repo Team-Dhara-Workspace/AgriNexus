@@ -1,4 +1,5 @@
-export const WEATHER_API_KEY = process.env.EXPO_PUBLIC_WEATHER_API_KEY || "";
+// export const WEATHER_API_KEY = process.env.WEATHER_API_KEY || process.env.EXPO_PUBLIC_WEATHER_API_KEY || "083f821287a9cc3049d78cb1583d3e97";
+export const WEATHER_API_KEY = "d747d59f16dd65ff98130d6144768dfc";
 
 export interface WeatherData {
   main: {

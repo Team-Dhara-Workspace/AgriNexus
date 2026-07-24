@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, StatusBar as RNStatusBar, Animated, Alert, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
 import { BACKEND_URL } from '../config';
 
 export type UserType = {
@@ -15,6 +16,7 @@ type AuthScreenProps = {
 };
 
 export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
 
   // Animation state
@@ -69,16 +71,16 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     // Basic inputs verification
     if (isLogin) {
       if (!email.trim() || !password) {
-        Alert.alert('Validation Error', 'Please enter both email/username and password');
+        Alert.alert(t('auth.validationError'), t('auth.enterEmailPassword'));
         return;
       }
     } else {
       if (!username.trim() || !email.trim() || !password || !confirmPassword) {
-        Alert.alert('Validation Error', 'All fields are required');
+        Alert.alert(t('auth.validationError'), t('auth.allFieldsRequired'));
         return;
       }
       if (password !== confirmPassword) {
-        Alert.alert('Validation Error', 'Passwords do not match');
+        Alert.alert(t('auth.validationError'), t('auth.passwordsDoNotMatch'));
         return;
       }
     }
@@ -107,28 +109,28 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
         result = JSON.parse(text);
       } catch (err) {
         console.error('Failed to parse JSON response:', text);
-        throw new Error('Server returned an invalid response. Please try again.');
+        throw new Error(t('auth.serverInvalidResponse'));
       }
 
       if (response.status >= 200 && response.status < 300 && result.success) {
         if (isLogin) {
-          Alert.alert('Success', 'Logged in successfully!');
+          Alert.alert(t('auth.success'), t('auth.loggedInSuccess'));
           onLoginSuccess(result.user);
         } else {
-          Alert.alert('Success', result.message || 'Account created successfully! Please log in.', [
-            { text: 'OK', onPress: () => setIsLogin(true) }
+          Alert.alert(t('auth.success'), result.message || t('auth.accountCreated'), [
+            { text: t('auth.ok'), onPress: () => setIsLogin(true) }
           ]);
           // Clear password fields on successful sign up
           setPassword('');
           setConfirmPassword('');
         }
       } else {
-        const errorMessage = result?.error || result?.message || 'Authentication failed. Please try again.';
-        Alert.alert('Authentication Error', errorMessage);
+        const errorMessage = result?.error || result?.message || t('auth.authFailed');
+        Alert.alert(t('auth.authError'), errorMessage);
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      Alert.alert('Error', error.message || 'Unable to connect to server. Please check your connection.');
+      Alert.alert(t('auth.error'), error.message || t('auth.unableToConnect'));
     } finally {
       setIsLoading(false);
     }
@@ -159,12 +161,12 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 <Ionicons name="leaf" size={32} color="white" />
               </Animated.View>
               <Text className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
-                {isLogin ? 'Welcome Back!' : 'Create Account'}
+                {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
               </Text>
               <Text className="text-base text-gray-500 text-center">
                 {isLogin
-                  ? 'Sign in to access your crop advisory dashboard'
-                  : 'Join AgriNexus to empower your farming journey'}
+                  ? t('auth.signInSubtext')
+                  : t('auth.joinSubtext')}
               </Text>
             </View>
 
@@ -173,12 +175,12 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
               {!isLogin && (
                 <View className="mb-3">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">Username</Text>
+                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">{t('auth.usernameLabel')}</Text>
                   <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
                     <Feather name="user" size={18} color="#9CA3AF" />
                     <TextInput
                       className="flex-1 ml-3 text-base text-gray-900"
-                      placeholder="Enter your username"
+                      placeholder={t('auth.usernamePlaceholder')}
                       placeholderTextColor="#9CA3AF"
                       value={username}
                       onChangeText={setUsername}
@@ -189,13 +191,13 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
               <View className="mb-3">
                 <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">
-                  {isLogin ? 'Email ID / Username' : 'Email ID'}
+                  {isLogin ? t('auth.emailLabel') : t('auth.emailOnlyLabel')}
                 </Text>
                 <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
                   <Feather name="mail" size={18} color="#9CA3AF" />
                   <TextInput
                     className="flex-1 ml-3 text-base text-gray-900"
-                    placeholder={isLogin ? "Enter email or username" : "Enter your email ID"}
+                    placeholder={isLogin ? t('auth.emailPlaceholder') : t('auth.emailOnlyPlaceholder')}
                     placeholderTextColor="#9CA3AF"
                     value={email}
                     onChangeText={setEmail}
@@ -207,13 +209,13 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
               <View className="mb-3">
                 <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">
-                  {isLogin ? 'Password' : 'New Password'}
+                  {isLogin ? t('auth.passwordLabel') : t('auth.newPasswordLabel')}
                 </Text>
                 <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
                   <Feather name="lock" size={18} color="#9CA3AF" />
                   <TextInput
                     className="flex-1 ml-3 text-base text-gray-900"
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
                     value={password}
@@ -227,12 +229,12 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
               {!isLogin && (
                 <View className="mb-1">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">Confirm Password</Text>
+                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">{t('auth.confirmPasswordLabel')}</Text>
                   <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
                     <Feather name="lock" size={18} color="#9CA3AF" />
                     <TextInput
                       className="flex-1 ml-3 text-base text-gray-900"
-                      placeholder="Confirm your password"
+                      placeholder={t('auth.confirmPasswordPlaceholder')}
                       placeholderTextColor="#9CA3AF"
                       secureTextEntry={!showConfirmPassword}
                       value={confirmPassword}
@@ -247,7 +249,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
               {isLogin && (
                 <TouchableOpacity className="self-end mb-3 mt-1">
-                  <Text className="text-sm font-semibold text-[#18553F]">Forgot Password?</Text>
+                  <Text className="text-sm font-semibold text-[#18553F]">{t('auth.forgotPassword')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -260,7 +262,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
                   <Text className="text-white text-lg font-bold">
-                    {isLogin ? 'Login' : 'Sign Up'}
+                    {isLogin ? t('auth.loginBtn') : t('auth.signUpBtn')}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -269,11 +271,11 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
             {/* Toggle Section */}
             <View className="flex-row justify-center mt-8">
               <Text className="text-gray-600 text-base">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                {isLogin ? t('auth.dontHaveAccount') : t('auth.alreadyHaveAccount')}
               </Text>
               <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
                 <Text className="text-[#18553F] font-bold text-base">
-                  {isLogin ? 'Sign Up' : 'Login'}
+                  {isLogin ? t('auth.signUpBtn') : t('auth.loginBtn')}
                 </Text>
               </TouchableOpacity>
             </View>

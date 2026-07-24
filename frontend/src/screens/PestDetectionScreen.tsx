@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { useTranslation } from 'react-i18next';
 import { StatusBar as RNStatusBar } from 'react-native';
 import { BACKEND_URL } from '../config';
 
@@ -12,6 +13,7 @@ type PestDetectionScreenProps = {
 };
 
 export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScreenProps) {
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -24,7 +26,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
   const handlePickPhoto = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
-      alert("Permission to access camera is required!");
+      alert(t('pest.cameraPermissionRequired'));
       return;
     }
 
@@ -111,11 +113,11 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
           annotatedImage: annotatedImageUri,
         });
       } else {
-        alert(data.error || "Analysis failed.");
+        alert(data.error || t('pest.analysisFailed'));
       }
     } catch (err: any) {
       console.log('Error analyzing image:', err);
-      alert("Failed to connect to the advisory server. Please ensure the server is running and try again.");
+      alert(t('pest.failedToConnectServer'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -140,17 +142,17 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
           <TouchableOpacity onPress={onOpenSidebar}>
             <Feather name="menu" size={24} color="#18553F" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-[#18553F]">Pest Detection</Text>
+          <Text className="text-xl font-bold text-[#18553F]">{t('pest.pestDetectionTitle')}</Text>
           <View style={{ width: 24 }} />
         </View>
 
         <ScrollView className="flex-1 px-4 pt-6">
 
           <Text className="text-[28px] font-extrabold text-gray-900 text-center leading-tight mb-2">
-            Identify Crop Issues
+            {t('pest.identifyCropIssues')}
           </Text>
           <Text className="text-sm text-gray-500 text-center mb-8 px-4">
-            Upload a clear photo or file of the affected plant part (leaf, stem, or fruit) for AI analysis.
+            {t('pest.uploadInstruction')}
           </Text>
 
           {/* Upload Area */}
@@ -175,14 +177,14 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                 <Feather name="file-text" size={48} color="#9CA3AF" />
                 <Text className="mt-4 text-gray-700 font-medium text-center">{selectedFileName}</Text>
                 <TouchableOpacity className="mt-2" onPress={handleClear}>
-                  <Text className="text-red-500 font-semibold text-sm">Remove File</Text>
+                  <Text className="text-red-500 font-semibold text-sm">{t('pest.removeFile')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View className="w-full bg-gray-50 rounded-xl p-8 items-center justify-center mb-6 border border-dashed border-gray-300">
                 <Feather name="upload-cloud" size={48} color="#9CA3AF" />
                 <Text className="mt-4 text-gray-500 text-center text-sm">
-                  Supported formats: JPG, PNG, PDF, DOCX
+                  {t('pest.supportedFormats')}
                 </Text>
               </View>
             )}
@@ -194,7 +196,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                   onPress={handlePickPhoto}
                 >
                   <Feather name="camera" size={18} color="#18553F" />
-                  <Text className="ml-2 font-semibold text-gray-700">Camera</Text>
+                  <Text className="ml-2 font-semibold text-gray-700">{t('pest.cameraBtn')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -202,7 +204,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                   onPress={handlePickDocument}
                 >
                   <Feather name="file" size={18} color="#18553F" />
-                  <Text className="ml-2 font-semibold text-gray-700">File</Text>
+                  <Text className="ml-2 font-semibold text-gray-700">{t('pest.fileBtn')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -219,7 +221,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                   <Feather name="upload" size={20} color="white" className="mr-2" />
                 )}
                 <Text className="text-white font-bold text-base">
-                  {isAnalyzing ? 'Uploading...' : 'Upload'}
+                  {isAnalyzing ? t('pest.uploading') : t('pest.upload')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -233,12 +235,12 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
                   <Feather name="alert-triangle" size={20} color="#EF4444" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs text-gray-500 font-medium uppercase tracking-wider">Diagnosis</Text>
+                  <Text className="text-xs text-gray-500 font-medium uppercase tracking-wider">{t('pest.diagnosisLabel')}</Text>
                   <Text className="text-lg font-bold text-gray-900 leading-tight">{diagnosis.title}</Text>
                 </View>
               </View>
 
-              <Text className="text-sm font-semibold text-[#18553F] mb-3">Recommended Remedies:</Text>
+              <Text className="text-sm font-semibold text-[#18553F] mb-3">{t('pest.recommendedRemedies')}</Text>
 
               {diagnosis.remedies.map((remedy, index) => (
                 <View key={index} className="flex-row items-start mb-2">

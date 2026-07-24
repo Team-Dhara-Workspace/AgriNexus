@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, Keyboa
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
+import { useTranslation } from 'react-i18next';
 import { BACKEND_URL } from '../config';
 import { renderFormattedMessage } from '../utils/markdown';
 import { UserType } from './AuthScreen';
@@ -31,11 +32,11 @@ export default function ChatScreen({
   setCurrentSessionId,
   onRefreshSessions
 }: ChatScreenProps) {
+  const { t, i18n } = useTranslation();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
   const scrollViewRef = useRef<ScrollView>(null);
-
   // Language state
   const languages = [
     { id: 'en', name: 'English', native: 'English' },
@@ -43,7 +44,9 @@ export default function ChatScreen({
     { id: 'te', name: 'Telugu', native: 'తెలుగు' },
     { id: 'hi', name: 'Hindi', native: 'हिंदी' }
   ];
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return languages.find(l => l.id === i18n.language) || languages[0];
+  });
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
 
@@ -92,15 +95,15 @@ export default function ChatScreen({
       }
 
       const file = result.assets[0];
-      Alert.alert("File Selected", `You selected: ${file.name}`);
+      Alert.alert(t('chat.fileSelected'), t('chat.youSelected', { name: file.name }));
     } catch (err) {
       console.log('Error picking document', err);
-      Alert.alert("Error", "Could not pick document");
+      Alert.alert(t('chat.errorPrefix', { msg: "" }).replace(': ', ''), t('chat.couldNotPickDocument'));
     }
   };
 
   const handleMicPress = () => {
-    Alert.alert("Voice Recording", "Microphone feature is coming soon!");
+    Alert.alert(t('chat.voiceRecording'), t('chat.micFeatureComingSoon'));
   };
 
   const handleSend = async () => {
@@ -108,7 +111,7 @@ export default function ChatScreen({
     if (trimmedMessage.length === 0) return;
 
     if (!user?.id) {
-      Alert.alert("Authentication Required", "Please log in to start chatting.");
+      Alert.alert(t('chat.authRequired'), t('chat.pleaseLogIn'));
       return;
     }
 
@@ -148,7 +151,7 @@ export default function ChatScreen({
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const processedText = data.response ? data.response.trim() : "Sorry, I received an empty response.";
+        const processedText = data.response ? data.response.trim() : t('chat.emptyResponse');
 
         // Update active session ID if a new session was created on backend
         if (data.session_id && data.session_id !== currentSessionId) {
@@ -167,11 +170,11 @@ export default function ChatScreen({
           onRefreshSessions();
         }
       } else {
-        const errorMsg = data.error || "Failed to generate answer from advisory server.";
+        const errorMsg = data.error || t('chat.failedToGenerateAnswer');
         setMessages(prev =>
           prev.map(msg =>
             msg.id === botMessageId
-              ? { ...msg, text: `Error: ${errorMsg}`, isLoading: false }
+              ? { ...msg, text: t('chat.errorPrefix', { msg: errorMsg }), isLoading: false }
               : msg
           )
         );
@@ -183,7 +186,7 @@ export default function ChatScreen({
           msg.id === botMessageId
             ? {
                 ...msg,
-                text: "Failed to connect to the advisory server. Please check your connection and try again.",
+                text: t('chat.failedToConnectServer'),
                 isLoading: false
               }
             : msg
@@ -215,7 +218,7 @@ export default function ChatScreen({
               className="flex-row items-center bg-[#EAF2ED] px-3 py-1.5 rounded-full"
             >
               <Feather name="plus" size={16} color="#1A744C" />
-              <Text className="text-xs font-semibold text-[#1A744C] ml-1">New Chat</Text>
+              <Text className="text-xs font-semibold text-[#1A744C] ml-1">{t('chat.newChat')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -224,11 +227,9 @@ export default function ChatScreen({
             <View className="mr-3 relative z-50">
               <TouchableOpacity
                 onPress={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex-row items-center bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm"
+                className="w-10 h-10 rounded-full bg-white border border-gray-100 items-center justify-center shadow-sm"
               >
-                <Ionicons name="language" size={16} color="#4B5563" />
-                <Text className="text-sm text-gray-800 mx-2 font-semibold">{selectedLanguage.native}</Text>
-                <Feather name={isLangDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#4B5563" />
+                <Ionicons name="language" size={18} color="#4B5563" />
               </TouchableOpacity>
 
               {isLangDropdownOpen && (
@@ -242,6 +243,7 @@ export default function ChatScreen({
                       className={`px-4 py-3 bg-white active:bg-gray-50 flex-row items-center justify-between border-b border-gray-50 last:border-b-0 ${selectedLanguage.id === lang.id ? 'bg-[#E6F4FE]/50' : ''}`}
                       onPress={() => {
                         setSelectedLanguage(lang);
+                        i18n.changeLanguage(lang.id);
                         setIsLangDropdownOpen(false);
                       }}
                     >
@@ -317,18 +319,18 @@ export default function ChatScreen({
         {isLoadingHistory ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#1A744C" />
-            <Text className="text-sm text-gray-500 mt-2">Loading chat history...</Text>
+            <Text className="text-sm text-gray-500 mt-2">{t('chat.loadingChatHistory')}</Text>
           </View>
         ) : messages.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6" style={{ flexGrow: 1 }}>
             {/* Heading */}
             <Text className="text-[28px] font-extrabold text-gray-900 text-center leading-tight">
-              How can I help your{"\n"}farm today?
+              {t('chat.howCanIHelp')}
             </Text>
 
             {/* Subtitle */}
             <Text className="text-sm text-gray-500 text-center mt-4 leading-relaxed px-1">
-              Ask about crops, soil, fertilizers, pests, weather insights, irrigation planning, disease detection, yield improvement, or farming recommendations.
+              {t('chat.askAboutCrops')}
             </Text>
           </View>
         ) : (
@@ -371,7 +373,7 @@ export default function ChatScreen({
             </TouchableOpacity>
 
             <TextInput
-              placeholder="Ask about your crop..."
+              placeholder={t('chat.askAboutYourCrop')}
               placeholderTextColor="#9CA3AF"
               className="flex-1 px-3 py-3 text-[15px] text-gray-800 min-h-[44px] max-h-[120px]"
               value={message}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
+import './src/locales/i18n';
 import { StatusBar } from 'expo-status-bar';
 import ChatScreen from './src/screens/ChatScreen';
 import PestDetectionScreen from './src/screens/PestDetectionScreen';
@@ -9,13 +10,14 @@ import HomeScreen from './src/screens/HomeScreen';
 import MarketScreen from './src/screens/MarketScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ConnectScreen from './src/screens/ConnectScreen';
+import LanguageSelectionScreen from './src/screens/LanguageSelectionScreen';
 import BottomNavbar from './src/components/BottomNavbar';
 import { BACKEND_URL } from './src/config';
 
-export type ScreenType = 'chat' | 'pest' | 'auth' | 'home' | 'market' | 'profile' | 'connect';
+export type ScreenType = 'language' | 'chat' | 'pest' | 'auth' | 'home' | 'market' | 'profile' | 'connect';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('auth');
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('language');
   const [user, setUser] = useState<UserType | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -23,7 +25,7 @@ export default function App() {
 
   const navigateTo = (screen: ScreenType) => {
     // Enforce login requirement: non-authenticated users are returned to auth screen
-    if (!user && screen !== 'auth') {
+    if (!user && screen !== 'auth' && screen !== 'language') {
       setCurrentScreen('auth');
       setIsSidebarOpen(false);
       return;
@@ -68,6 +70,10 @@ export default function App() {
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />
 
+      {currentScreen === 'language' && (
+        <LanguageSelectionScreen onLanguageSelected={() => setCurrentScreen('auth')} />
+      )}
+
       {currentScreen === 'auth' && (
         <AuthScreen onLoginSuccess={handleLoginSuccess} />
       )}
@@ -103,7 +109,7 @@ export default function App() {
         <ConnectScreen />
       )}
 
-      {currentScreen !== 'auth' && (
+      {currentScreen !== 'auth' && currentScreen !== 'language' && (
         <>
           <Sidebar
             isOpen={isSidebarOpen}

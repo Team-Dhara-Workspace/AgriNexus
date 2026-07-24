@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ScreenType } from '../../App';
 
 type BottomNavbarProps = {
@@ -9,11 +10,13 @@ type BottomNavbarProps = {
 };
 
 export default function BottomNavbar({ currentScreen, onNavigate }: BottomNavbarProps) {
+  const { t } = useTranslation();
+
   const tabs = [
-    { id: 'home', label: 'Home', icon: 'home' },
-    { id: 'chat', label: 'Chat', icon: 'message-circle' },
-    { id: 'market', label: 'Market', icon: 'trending-up' },
-    { id: 'connect', label: 'Connect', icon: 'users' },
+    { id: 'home', label: t('navbar.home'), icon: 'home' },
+    { id: 'chat', label: t('navbar.chat'), icon: 'message-circle' },
+    { id: 'market', label: t('navbar.market'), icon: 'trending-up' },
+    { id: 'connect', label: t('navbar.connect'), icon: 'users' },
   ] as const;
 
   return (

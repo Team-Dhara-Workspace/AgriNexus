@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, SafeAreaView, Platform, StatusBar as RNStatusBar, ScrollView, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useTranslation } from 'react-i18next';
 import { ScreenType } from '../../App';
 import { fetchWeatherData, WeatherData, getIoniconsName } from '../utils/weather';
 
@@ -11,12 +12,21 @@ type HomeScreenProps = {
 };
 
 export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
+  const { t, i18n } = useTranslation();
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  
+  const languages = [
+    { id: 'en', native: 'English' },
+    { id: 'ta', native: 'தமிழ்' },
+    { id: 'te', native: 'తెలుగు' },
+    { id: 'hi', native: 'हिंदी' }
+  ];
   
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
-  const [locationName, setLocationName] = useState<string>('Detecting Location...');
+  const [locationName, setLocationName] = useState<string>(t('home.detectingLocation'));
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
@@ -27,7 +37,7 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setWeatherError('Permission to access location was denied');
+          setWeatherError(t('home.locationPermissionDenied'));
           setWeatherLoading(false);
           return;
         }
@@ -35,9 +45,9 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
         let location = await Location.getCurrentPositionAsync({});
         const data = await fetchWeatherData(location.coords.latitude, location.coords.longitude);
         setWeatherData(data);
-        setLocationName(data.name || 'Your Location');
+        setLocationName(data.name || t('home.yourLocation'));
       } catch (error: any) {
-        setWeatherError(error.message || 'Could not fetch weather');
+        setWeatherError(error.message || t('home.couldNotFetchWeather'));
       } finally {
         setWeatherLoading(false);
       }
@@ -45,9 +55,9 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
   }, []);
 
   const insights = [
-    { id: '1', title: 'Market Insight', desc: 'Tomato prices are up 15% this week in your region.', color: '#F0FDF4', iconColor: '#10B981', icon: 'trending-up' },
-    { id: '2', title: 'Pest Alert', desc: 'Fall Armyworm detected in nearby farms. Check crops.', color: '#FEF2F2', iconColor: '#EF4444', icon: 'alert-triangle' },
-    { id: '3', title: 'Weather Warning', desc: 'Heavy rain expected tomorrow. Delay pesticide usage.', color: '#EFF6FF', iconColor: '#3B82F6', icon: 'cloud-rain' },
+    { id: '1', title: t('home.insightMarket'), desc: t('home.insightMarketDesc'), color: '#F0FDF4', iconColor: '#10B981', icon: 'trending-up' },
+    { id: '2', title: t('home.insightPest'), desc: t('home.insightPestDesc'), color: '#FEF2F2', iconColor: '#EF4444', icon: 'alert-triangle' },
+    { id: '3', title: t('home.insightWeather'), desc: t('home.insightWeatherDesc'), color: '#EFF6FF', iconColor: '#3B82F6', icon: 'cloud-rain' },
   ];
 
   const screenWidth = Dimensions.get('window').width;
@@ -68,10 +78,10 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
   }, [currentInsightIndex, snapInterval, insights.length]);
 
   const tools = [
-    { id: 'chat', label: 'Farm Advisor', icon: 'message-circle', screen: 'chat' },
-    { id: 'pest', label: 'Pest Scan', icon: 'camera', screen: 'pest' },
-    { id: 'market', label: 'Market', icon: 'dollar-sign', screen: 'market' },
-    { id: 'articles', label: 'Articles', icon: 'book-open', screen: 'home' },
+    { id: 'chat', label: t('home.toolFarmAdvisor'), icon: 'message-circle', screen: 'chat' },
+    { id: 'pest', label: t('home.toolPestScan'), icon: 'camera', screen: 'pest' },
+    { id: 'market', label: t('home.toolMarket'), icon: 'dollar-sign', screen: 'market' },
+    { id: 'articles', label: t('home.toolArticles'), icon: 'book-open', screen: 'home' },
   ];
 
   return (
@@ -84,9 +94,40 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
             <Text className="text-3xl font-extrabold text-[#1A744C]">AgriNexus</Text>
           </View>
           <View className="flex-row items-center z-50">
-            <TouchableOpacity className="w-10 h-10 rounded-full bg-white border border-gray-100 items-center justify-center shadow-sm">
-              <Feather name="bell" size={20} color="#4B5563" />
-            </TouchableOpacity>
+            {/* Language Switcher */}
+            <View className="relative z-50 mr-3">
+              <TouchableOpacity onPress={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}>
+                <View className="w-10 h-10 rounded-full bg-white border border-gray-100 items-center justify-center shadow-sm">
+                  <Ionicons name="language" size={18} color="#4B5563" />
+                </View>
+              </TouchableOpacity>
+
+              {isLanguageDropdownOpen && (
+                <View 
+                  className="absolute top-12 right-0 bg-white rounded-xl border border-gray-100 py-1.5" 
+                  style={{ elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, minWidth: 120 }}
+                >
+                  {languages.map((lang) => (
+                    <TouchableOpacity 
+                      key={lang.id}
+                      className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center justify-between"
+                      onPress={() => {
+                        i18n.changeLanguage(lang.id);
+                        setIsLanguageDropdownOpen(false);
+                      }}
+                    >
+                      <Text className={`text-sm font-medium ${i18n.language === lang.id ? 'text-[#1A744C]' : 'text-gray-800'}`}>
+                        {lang.native}
+                      </Text>
+                      {i18n.language === lang.id && (
+                        <Feather name="check" size={16} color="#1A744C" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
 
             {/* My Account */}
             <View className="relative z-50 ml-3">
@@ -105,11 +146,11 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
                     className="px-4 py-3 bg-white active:bg-gray-50 flex-row items-center border-b border-gray-50"
                     onPress={() => {
                       setIsAccountDropdownOpen(false);
-                      Alert.alert("Settings", "Navigating to settings...");
+                      Alert.alert(t('home.settings'), t('home.navigatingToSettings'));
                     }}
                   >
                     <Feather name="settings" size={16} color="#4B5563" />
-                    <Text className="text-sm text-gray-800 ml-3 font-medium">Settings</Text>
+                    <Text className="text-sm text-gray-800 ml-3 font-medium">{t('home.settings')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity 
@@ -120,7 +161,7 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
                     }}
                   >
                     <Feather name="log-out" size={16} color="#EF4444" />
-                    <Text className="text-sm text-red-500 ml-3 font-medium">Logout</Text>
+                    <Text className="text-sm text-red-500 ml-3 font-medium">{t('home.logout')}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -153,7 +194,7 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
                       {Math.round(weatherData.main.temp)}°<Text className="text-2xl font-normal">C</Text>
                     </Text>
                     <Text className="text-white text-base font-medium capitalize">
-                      {weatherData.weather[0]?.description || 'Clear'}
+                      {weatherData.weather[0]?.description || t('home.clear')}
                     </Text>
                   </View>
                   
@@ -169,11 +210,11 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
                 <View className="flex-row items-center mt-6 pt-5 border-t border-white/20">
                   <View className="flex-row items-center mr-6">
                     <Feather name="droplet" size={14} color="rgba(255,255,255,0.8)" />
-                    <Text className="text-white/80 ml-2 text-sm font-medium">Humidity {weatherData.main.humidity}%</Text>
+                    <Text className="text-white/80 ml-2 text-sm font-medium">{t('home.humidity')} {weatherData.main.humidity}%</Text>
                   </View>
                   <View className="flex-row items-center">
                     <Feather name="wind" size={14} color="rgba(255,255,255,0.8)" />
-                    <Text className="text-white/80 ml-2 text-sm font-medium">Wind {Math.round(weatherData.wind.speed * 3.6)} km/h</Text>
+                    <Text className="text-white/80 ml-2 text-sm font-medium">{t('home.wind')} {Math.round(weatherData.wind.speed * 3.6)} km/h</Text>
                   </View>
                 </View>
                </>
@@ -185,7 +226,7 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
 
         {/* Tools Grid */}
         <View className="px-6 mb-2">
-          <Text className="text-lg font-bold text-gray-900 mb-4">Quick Tools</Text>
+          <Text className="text-lg font-bold text-gray-900 mb-4">{t('home.quickTools')}</Text>
           <View className="flex-row flex-wrap justify-between">
             {tools.map((tool) => (
               <TouchableOpacity 
@@ -205,7 +246,7 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
         {/* Insights Carousel */}
         <View className="mb-6 mt-2">
           <View className="px-6 flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-bold text-gray-900">Farm Insights</Text>
+            <Text className="text-lg font-bold text-gray-900">{t('home.farmInsights')}</Text>
           </View>
           <ScrollView
             ref={scrollViewRef}

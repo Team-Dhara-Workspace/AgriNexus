@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, Dimensions, TouchableWithoutFeedback, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ScreenType } from '../../App';
 import { BACKEND_URL } from '../config';
 
@@ -37,6 +38,7 @@ export default function Sidebar({
   onNewChat,
   refreshTrigger
 }: SidebarProps) {
+  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -94,15 +96,15 @@ export default function Sidebar({
 
   const handleDeleteChat = (chatId: string, chatTitle: string) => {
     Alert.alert(
-      "Delete Chat",
-      `Are you sure you want to delete "${chatTitle}"?`,
+      t('sidebar.deleteChatTitle'),
+      t('sidebar.deleteChatPrompt', { title: chatTitle }),
       [
         {
-          text: "Cancel",
+          text: t('sidebar.cancel'),
           style: "cancel"
         },
         {
-          text: "Delete",
+          text: t('sidebar.delete'),
           style: "destructive",
           onPress: async () => {
             try {
@@ -116,11 +118,11 @@ export default function Sidebar({
                   onNewChat();
                 }
               } else {
-                Alert.alert("Error", data.error || "Could not delete chat");
+                Alert.alert(t('sidebar.error'), data.error || t('sidebar.deleteError'));
               }
             } catch (err) {
               console.error("Error deleting session:", err);
-              Alert.alert("Error", "Could not connect to server");
+              Alert.alert(t('sidebar.error'), t('sidebar.connectError'));
             }
           }
         }
@@ -152,7 +154,7 @@ export default function Sidebar({
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100 bg-white" style={{ zIndex: 50, elevation: 5 }}>
-          <Text className="text-xl font-bold text-gray-900">Menu</Text>
+          <Text className="text-xl font-bold text-gray-900">{t('sidebar.menu')}</Text>
           <TouchableOpacity onPress={onClose} className="p-1">
             <Feather name="x" size={24} color="#6B7280" />
           </TouchableOpacity>
@@ -169,19 +171,19 @@ export default function Sidebar({
               className="flex-row items-center justify-center bg-[#1A744C] py-3 px-4 rounded-xl shadow-sm active:bg-[#135939]"
             >
               <Feather name="plus-circle" size={18} color="white" />
-              <Text className="text-white font-bold text-base ml-2">New Chat</Text>
+              <Text className="text-white font-bold text-base ml-2">{t('sidebar.newChat')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Chat List */}
           <View className="px-3">
-            <Text className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Chats</Text>
+            <Text className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('sidebar.recentChats')}</Text>
             {isLoading ? (
               <View className="py-6 items-center">
                 <ActivityIndicator size="small" color="#1A744C" />
               </View>
             ) : chats.length === 0 ? (
-              <Text className="text-gray-400 text-center mt-6">No recent chats</Text>
+              <Text className="text-gray-400 text-center mt-6">{t('sidebar.noRecentChats')}</Text>
             ) : (
               chats.map((chat) => {
                 const isActive = currentSessionId === chat.id;

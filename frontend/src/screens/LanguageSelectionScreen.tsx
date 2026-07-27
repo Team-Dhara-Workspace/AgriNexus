@@ -30,13 +30,13 @@ export default function LanguageSelectionScreen({ onLanguageSelected }: Language
         
         {/* Header section */}
         <View className="items-center mb-8">
-          <View className="w-16 h-16 bg-[#EAF5EF] rounded-full items-center justify-center mb-4 shadow-sm">
-            <Feather name="globe" size={28} color="#1A744C" />
+          <View className="w-14 h-14 bg-[#EAF5EF] rounded-full items-center justify-center mb-4 shadow-sm">
+            <Feather name="globe" size={20} color="#1A744C" />
           </View>
-          <Text className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight text-center">
+          <Text className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight text-center">
             Choose Your Language
           </Text>
-          <Text className="text-base text-gray-500 text-center px-4">
+          <Text className="text-sm text-gray-500 text-center px-4">
             Select your preferred language to continue
           </Text>
         </View>
@@ -49,14 +49,14 @@ export default function LanguageSelectionScreen({ onLanguageSelected }: Language
               className={`w-[48%] py-8 justify-center items-center bg-white rounded-[32px] shadow-sm border-2 ${i18n.language === lang.id ? 'border-[#1A744C] bg-[#F0FDF4]' : 'border-gray-100'} active:bg-gray-50 mb-4`}
               onPress={() => handleSelectLanguage(lang.id)}
             >
-              <Text className={`text-5xl mb-3 font-semibold ${i18n.language === lang.id ? 'text-[#1A744C]' : 'text-gray-400'}`}>
+              <Text className={`text-3xl mb-3 font-semibold ${i18n.language === lang.id ? 'text-[#1A744C]' : 'text-gray-400'}`}>
                 {lang.symbol}
               </Text>
-              <Text className={`text-xl mb-1 font-bold ${i18n.language === lang.id ? 'text-[#1A744C]' : 'text-gray-800'}`}>
+              <Text className={`text-base mb-1 font-bold ${i18n.language === lang.id ? 'text-[#1A744C]' : 'text-gray-800'}`}>
                 {lang.native}
               </Text>
               {lang.id !== 'en' && (
-                 <Text className={`text-sm font-medium ${i18n.language === lang.id ? 'text-[#1A744C]/80' : 'text-gray-500'}`}>
+                 <Text className={`text-xs font-medium ${i18n.language === lang.id ? 'text-[#1A744C]/80' : 'text-gray-500'}`}>
                    {lang.name}
                  </Text>
               )}

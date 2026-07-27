@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, SafeAreaView, Platform, StatusBar as RNStatusBar, ScrollView, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { fetchWeather } from '../store/slices/weatherSlice';
 import { ScreenType } from '../../App';
-import { fetchWeatherData, WeatherData, getIoniconsName } from '../utils/weather';
+import { getIoniconsName } from '../utils/weather';
 
 type HomeScreenProps = {
   onNavigate: (screen: ScreenType) => void;
@@ -23,36 +25,27 @@ export default function HomeScreen({ onNavigate, onLogout }: HomeScreenProps) {
     { id: 'hi', native: 'हिंदी' }
   ];
   
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(true);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: weatherData, loading: weatherLoading, error: weatherError, lastFetched } = useSelector((state: RootState) => state.weather);
   const [locationName, setLocationName] = useState<string>(t('home.detectingLocation'));
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
 
   useEffect(() => {
-    (async () => {
-      setWeatherLoading(true);
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setWeatherError(t('home.locationPermissionDenied'));
-          setWeatherLoading(false);
-          return;
-        }
+    if (weatherData) {
+      setLocationName(weatherData.name || t('home.yourLocation'));
+    }
+  }, [weatherData, t]);
 
-        let location = await Location.getCurrentPositionAsync({});
-        const data = await fetchWeatherData(location.coords.latitude, location.coords.longitude);
-        setWeatherData(data);
-        setLocationName(data.name || t('home.yourLocation'));
-      } catch (error: any) {
-        setWeatherError(error.message || t('home.couldNotFetchWeather'));
-      } finally {
-        setWeatherLoading(false);
-      }
-    })();
-  }, []);
+  useEffect(() => {
+    // Fetch if no data exists, or if the cache is older than 15 minutes (900000 ms)
+    const isStale = !lastFetched || (Date.now() - lastFetched > 900000);
+    
+    if (isStale) {
+      dispatch(fetchWeather());
+    }
+  }, [dispatch, lastFetched]);
 
   const insights = [
     { id: '1', title: t('home.insightMarket'), desc: t('home.insightMarketDesc'), color: '#F0FDF4', iconColor: '#10B981', icon: 'trending-up' },

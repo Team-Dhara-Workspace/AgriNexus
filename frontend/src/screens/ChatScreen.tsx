@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar, ActivityIndicator } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTranslation } from 'react-i18next';
@@ -104,6 +104,10 @@ export default function ChatScreen({
 
   const handleMicPress = () => {
     Alert.alert(t('chat.voiceRecording'), t('chat.micFeatureComingSoon'));
+  };
+
+  const handleConversationalMode = () => {
+    Alert.alert('Conversational Mode', 'This feature will be added');
   };
 
   const handleSend = async () => {
@@ -211,14 +215,6 @@ export default function ChatScreen({
           <View className="flex-row items-center">
             <TouchableOpacity onPress={onOpenSidebar} className="mr-3">
               <Feather name="menu" size={24} color="#18553F" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setCurrentSessionId(null)}
-              className="flex-row items-center bg-[#EAF2ED] px-3 py-1.5 rounded-full"
-            >
-              <Feather name="plus" size={16} color="#1A744C" />
-              <Text className="text-xs font-semibold text-[#1A744C] ml-1">{t('chat.newChat')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -366,10 +362,10 @@ export default function ChatScreen({
         <View className="px-5 pb-8 pt-2 bg-[#F5FAF6]">
           <View className="flex-row items-end min-h-[60px] bg-white border border-gray-200 rounded-[30px] pl-2.5 pr-1.5 py-1.5 shadow-sm relative">
             <TouchableOpacity
-              onPress={handlePickDocument}
+              onPress={handleConversationalMode}
               className="w-[38px] h-[38px] rounded-full items-center justify-center bg-[#EAF2ED] mb-1.5 active:bg-[#D4E8DC] transition-colors duration-200"
             >
-              <Feather name="plus" size={20} color="#1A744C" />
+              <MaterialCommunityIcons name="waveform" size={20} color="#1A744C" style={{ textShadowColor: '#1A744C', textShadowRadius: 0.5, textShadowOffset: { width: 0.5, height: 0.5 } }} />
             </TouchableOpacity>
 
             <TextInput

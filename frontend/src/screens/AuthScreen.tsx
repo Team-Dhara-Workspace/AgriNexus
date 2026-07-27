@@ -88,6 +88,22 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     setIsLoading(true);
 
     try {
+      // Mock Login Implementation
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network request
+
+      if (isLogin) {
+        Alert.alert(t('auth.success'), t('auth.loggedInSuccess'));
+        onLoginSuccess({ id: 1, username: 'MockUser', email: email.trim() || 'mock@example.com' });
+      } else {
+        Alert.alert(t('auth.success'), t('auth.accountCreated'), [
+          { text: t('auth.ok'), onPress: () => setIsLogin(true) }
+        ]);
+        // Clear password fields on successful sign up
+        setPassword('');
+        setConfirmPassword('');
+      }
+
+      /* Uncomment this block to restore backend login
       const endpoint = isLogin ? `${BACKEND_URL}/users/login/` : `${BACKEND_URL}/users/signup/`;
       const body = isLogin
         ? { email_or_username: email.trim(), password }
@@ -128,6 +144,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
         const errorMessage = result?.error || result?.message || t('auth.authFailed');
         Alert.alert(t('auth.authError'), errorMessage);
       }
+      */
     } catch (error: any) {
       console.error('Auth error:', error);
       Alert.alert(t('auth.error'), error.message || t('auth.unableToConnect'));

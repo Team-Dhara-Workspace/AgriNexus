@@ -13,6 +13,8 @@ import ConnectScreen from './src/screens/ConnectScreen';
 import LanguageSelectionScreen from './src/screens/LanguageSelectionScreen';
 import BottomNavbar from './src/components/BottomNavbar';
 import { BACKEND_URL } from './src/config';
+import { Provider } from 'react-redux';
+import { store } from './src/store/store';
 
 export type ScreenType = 'language' | 'chat' | 'pest' | 'auth' | 'home' | 'market' | 'profile' | 'connect';
 
@@ -67,67 +69,69 @@ export default function App() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+    <Provider store={store}>
+      <View style={{ flex: 1 }}>
+        <StatusBar style="dark" />
 
-      {currentScreen === 'language' && (
-        <LanguageSelectionScreen onLanguageSelected={() => setCurrentScreen('auth')} />
-      )}
+        {currentScreen === 'language' && (
+          <LanguageSelectionScreen onLanguageSelected={() => setCurrentScreen('auth')} />
+        )}
 
-      {currentScreen === 'auth' && (
-        <AuthScreen onLoginSuccess={handleLoginSuccess} />
-      )}
+        {currentScreen === 'auth' && (
+          <AuthScreen onLoginSuccess={handleLoginSuccess} />
+        )}
 
-      {currentScreen === 'chat' && (
-        <ChatScreen
-          onOpenSidebar={() => setIsSidebarOpen(true)}
-          onLogout={handleLogout}
-          user={user}
-          currentSessionId={currentSessionId}
-          setCurrentSessionId={setCurrentSessionId}
-          onRefreshSessions={triggerSidebarRefresh}
-        />
-      )}
-
-      {currentScreen === 'pest' && (
-        <PestDetectionScreen onOpenSidebar={() => setIsSidebarOpen(true)} />
-      )}
-
-      {currentScreen === 'home' && (
-        <HomeScreen onNavigate={navigateTo} onLogout={handleLogout} />
-      )}
-
-      {currentScreen === 'market' && (
-        <MarketScreen />
-      )}
-
-      {currentScreen === 'profile' && (
-        <ProfileScreen />
-      )}
-
-      {currentScreen === 'connect' && (
-        <ConnectScreen />
-      )}
-
-      {currentScreen !== 'auth' && currentScreen !== 'language' && (
-        <>
-          <Sidebar
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-            onNavigate={navigateTo}
-            currentScreen={currentScreen}
-            userId={user?.id}
+        {currentScreen === 'chat' && (
+          <ChatScreen
+            onOpenSidebar={() => setIsSidebarOpen(true)}
+            onLogout={handleLogout}
+            user={user}
             currentSessionId={currentSessionId}
-            onSelectSession={(sessionId) => setCurrentSessionId(sessionId)}
-            onNewChat={() => setCurrentSessionId(null)}
-            refreshTrigger={sidebarRefreshTrigger}
+            setCurrentSessionId={setCurrentSessionId}
+            onRefreshSessions={triggerSidebarRefresh}
           />
-          <BottomNavbar
-            currentScreen={currentScreen}
-            onNavigate={navigateTo}
-          />
-        </>
-      )}
-    </View>
+        )}
+
+        {currentScreen === 'pest' && (
+          <PestDetectionScreen onOpenSidebar={() => setIsSidebarOpen(true)} />
+        )}
+
+        {currentScreen === 'home' && (
+          <HomeScreen onNavigate={navigateTo} onLogout={handleLogout} />
+        )}
+
+        {currentScreen === 'market' && (
+          <MarketScreen />
+        )}
+
+        {currentScreen === 'profile' && (
+          <ProfileScreen />
+        )}
+
+        {currentScreen === 'connect' && (
+          <ConnectScreen />
+        )}
+
+        {currentScreen !== 'auth' && currentScreen !== 'language' && (
+          <>
+            <Sidebar
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+              onNavigate={navigateTo}
+              currentScreen={currentScreen}
+              userId={user?.id}
+              currentSessionId={currentSessionId}
+              onSelectSession={(sessionId) => setCurrentSessionId(sessionId)}
+              onNewChat={() => setCurrentSessionId(null)}
+              refreshTrigger={sidebarRefreshTrigger}
+            />
+            <BottomNavbar
+              currentScreen={currentScreen}
+              onNavigate={navigateTo}
+            />
+          </>
+        )}
+      </View>
+    </Provider>
   );
 }

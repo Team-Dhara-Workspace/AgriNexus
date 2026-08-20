@@ -6,7 +6,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pathlib import Path
 
 ### For Embedding and Vector DB 
+# pyrefly: ignore [missing-import]
 import numpy as np
+# pyrefly: ignore [missing-import]
 from sentence_transformers import SentenceTransformer
 from typing import List, Any
 

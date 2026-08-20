@@ -12,3 +12,4 @@ chromadb
 langchain-groq
 python-dotenv
 django-cors-headers
+mysqlclient

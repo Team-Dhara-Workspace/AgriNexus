@@ -10,19 +10,46 @@ from chatbot.services import split_documents, process_all_Pdfs, ingest_pipeline
 # pyrefly: ignore [missing-import]
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
+# from groq import Groq
+
+#available models
+''' openai/gpt-oss-20b
+canopylabs/orpheus-arabic-saudi
+qwen/qwen3.6-27b
+allam-2-7b
+whisper-large-v3
+groq/compound-mini
+whisper-large-v3-turbo
+openai/gpt-oss-120b
+openai/gpt-oss-safeguard-20b
+canopylabs/orpheus-v1-english
+meta-llama/llama-prompt-guard-2-22m
+groq/compound
+meta-llama/llama-prompt-guard-2-86m'''
 
 load_dotenv()
-
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
     raise ValueError("GROQ_API_KEY not found in .env file.")
 
+# 1. Create Groq client
+# client = Groq(api_key=groq_api_key)
+
+# 2. Get all available models
+# models = client.models.list()
+
+# 3. Print model IDs
+# print("Available Groq models:\n")
+# for model in models.data:
+#     print(model.id)
+
+
 embedding_manager = EmbeddingManager()
 vector_store = VectorStore()
 retriver = RAGRetriver(vector_store=vector_store, embedding_manager=embedding_manager)
 
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-8b-instant", temperature=0.1, max_tokens=1024)
+llm = ChatGroq(groq_api_key=groq_api_key, model_name="openai/gpt-oss-120b", temperature=0.1, max_tokens=1024)
 
 def get_authenticated_user(request, data=None):
     if request.user.is_authenticated:

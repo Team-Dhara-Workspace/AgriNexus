@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import * as Location from 'expo-location';
-import { fetchWeatherData, WeatherData } from '../utils/weather';
+import { fetchWeatherData, WeatherData } from '../../utils/weather';
 
 interface WeatherState {
   data: WeatherData | null;

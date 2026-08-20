@@ -90,7 +90,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
         } as any);
       }
 
-      const url = `${BACKEND_URL}/disease/path`;
+      const url = `${BACKEND_URL}/disease/pest`;
 
       const response = await fetch(url, {
         method: 'POST',

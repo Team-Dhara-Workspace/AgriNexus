@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, StatusBar as RNStatusBar, Animated, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Animated, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
@@ -159,15 +160,20 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }}
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-          <View className="flex-1 justify-center px-8 py-6">
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View className="flex-1 justify-center px-6 py-10">
+            
             {/* Header section */}
-            <View className="items-center mb-6">
+            <View className="items-center mb-8">
               <Animated.View
-                className="w-16 h-16 bg-[#1A744C] rounded-2xl items-center justify-center mb-4 shadow-md"
+                className="w-16 h-16 bg-[#072C1E] rounded-2xl items-center justify-center mb-4 shadow-md border border-gray-800"
                 style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 4,
                   transform: [
                     { translateX: slideAnim },
                     { scale: growAnim },
@@ -175,28 +181,69 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                   ]
                 }}
               >
-                <Ionicons name="leaf" size={32} color="white" />
+                <Ionicons name="leaf" size={30} color="#10B981" />
               </Animated.View>
-              <Text className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
-                {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
+
+              <Text 
+                className="text-3xl font-extrabold text-[#0B3D2E] tracking-tight mb-1.5 text-center"
+                style={{ fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' }}
+              >
+                Agri<Text className="text-[#10B981]">Nexus</Text>
               </Text>
-              <Text className="text-base text-gray-500 text-center">
-                {isLogin
-                  ? t('auth.signInSubtext')
-                  : t('auth.joinSubtext')}
+
+              <Text className="text-sm text-gray-500 text-center px-4 font-medium">
+                {isLogin ? t('auth.signInSubtext') : t('auth.joinSubtext')}
               </Text>
             </View>
 
-            {/* Form section */}
-            <View className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            {/* Form Card */}
+            <View 
+              className="bg-white p-7 rounded-3xl"
+              style={{
+                borderWidth: 2,
+                borderColor: '#0F172A',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.14,
+                shadowRadius: 14,
+                elevation: 6,
+              }}
+            >
+              {/* Segmented Tab Switcher */}
+              <View className="bg-[#F1F5F9] p-1.5 rounded-full flex-row mb-6 border border-gray-100">
+                <TouchableOpacity
+                  className={`flex-1 py-2.5 rounded-full items-center justify-center ${
+                    isLogin ? 'bg-[#072C1E] shadow-sm' : ''
+                  }`}
+                  onPress={() => setIsLogin(true)}
+                >
+                  <Text className={`text-xs font-bold ${isLogin ? 'text-white' : 'text-gray-600'}`}>
+                    {t('auth.loginBtn')}
+                  </Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity
+                  className={`flex-1 py-2.5 rounded-full items-center justify-center ${
+                    !isLogin ? 'bg-[#072C1E] shadow-sm' : ''
+                  }`}
+                  onPress={() => setIsLogin(false)}
+                >
+                  <Text className={`text-xs font-bold ${!isLogin ? 'text-white' : 'text-gray-600'}`}>
+                    {t('auth.signUpBtn')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Username Field (Sign Up Only) */}
               {!isLogin && (
-                <View className="mb-3">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">{t('auth.usernameLabel')}</Text>
-                  <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
-                    <Feather name="user" size={18} color="#9CA3AF" />
+                <View className="mb-4">
+                  <Text className="text-xs font-bold text-[#0B3D2E] uppercase tracking-wider mb-2 ml-1">
+                    {t('auth.usernameLabel')}
+                  </Text>
+                  <View className="flex-row items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl px-4 py-3.5">
+                    <Feather name="user" size={16} color="#0B3D2E" />
                     <TextInput
-                      className="flex-1 ml-3 text-base text-gray-900"
+                      className="flex-1 ml-3 text-sm text-gray-900"
                       placeholder={t('auth.usernamePlaceholder')}
                       placeholderTextColor="#9CA3AF"
                       value={username}
@@ -206,14 +253,15 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 </View>
               )}
 
-              <View className="mb-3">
-                <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">
+              {/* Email / Username Field */}
+              <View className="mb-4">
+                <Text className="text-xs font-bold text-[#0B3D2E] uppercase tracking-wider mb-2 ml-1">
                   {isLogin ? t('auth.emailLabel') : t('auth.emailOnlyLabel')}
                 </Text>
-                <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
-                  <Feather name="mail" size={18} color="#9CA3AF" />
+                <View className="flex-row items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl px-4 py-3.5">
+                  <Feather name="mail" size={16} color="#0B3D2E" />
                   <TextInput
-                    className="flex-1 ml-3 text-base text-gray-900"
+                    className="flex-1 ml-3 text-sm text-gray-900"
                     placeholder={isLogin ? t('auth.emailPlaceholder') : t('auth.emailOnlyPlaceholder')}
                     placeholderTextColor="#9CA3AF"
                     value={email}
@@ -224,14 +272,15 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 </View>
               </View>
 
-              <View className="mb-3">
-                <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">
+              {/* Password Field */}
+              <View className="mb-4">
+                <Text className="text-xs font-bold text-[#0B3D2E] uppercase tracking-wider mb-2 ml-1">
                   {isLogin ? t('auth.passwordLabel') : t('auth.newPasswordLabel')}
                 </Text>
-                <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
-                  <Feather name="lock" size={18} color="#9CA3AF" />
+                <View className="flex-row items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl px-4 py-3.5">
+                  <Feather name="lock" size={16} color="#0B3D2E" />
                   <TextInput
-                    className="flex-1 ml-3 text-base text-gray-900"
+                    className="flex-1 ml-3 text-sm text-gray-900"
                     placeholder={t('auth.passwordPlaceholder')}
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
@@ -239,18 +288,21 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                     onChangeText={setPassword}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-1">
-                    <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
+                    <Feather name={showPassword ? "eye" : "eye-off"} size={16} color="#64748B" />
                   </TouchableOpacity>
                 </View>
               </View>
 
+              {/* Confirm Password Field (Sign Up Only) */}
               {!isLogin && (
-                <View className="mb-1">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1 ml-1">{t('auth.confirmPasswordLabel')}</Text>
-                  <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5">
-                    <Feather name="lock" size={18} color="#9CA3AF" />
+                <View className="mb-3">
+                  <Text className="text-xs font-bold text-[#0B3D2E] uppercase tracking-wider mb-2 ml-1">
+                    {t('auth.confirmPasswordLabel')}
+                  </Text>
+                  <View className="flex-row items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl px-4 py-3.5">
+                    <Feather name="shield" size={16} color="#0B3D2E" />
                     <TextInput
-                      className="flex-1 ml-3 text-base text-gray-900"
+                      className="flex-1 ml-3 text-sm text-gray-900"
                       placeholder={t('auth.confirmPasswordPlaceholder')}
                       placeholderTextColor="#9CA3AF"
                       secureTextEntry={!showConfirmPassword}
@@ -258,40 +310,52 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                       onChangeText={setConfirmPassword}
                     />
                     <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="p-1">
-                      <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
+                      <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={16} color="#64748B" />
                     </TouchableOpacity>
                   </View>
                 </View>
               )}
 
+              {/* Forgot Password Link */}
               {isLogin && (
-                <TouchableOpacity className="self-end mb-3 mt-1">
-                  <Text className="text-sm font-semibold text-[#18553F]">{t('auth.forgotPassword')}</Text>
+                <TouchableOpacity className="self-end mb-5 mt-1">
+                  <Text className="text-xs font-bold text-[#0B3D2E]">{t('auth.forgotPassword')}</Text>
                 </TouchableOpacity>
               )}
 
+              {/* Submit CTA Button */}
               <TouchableOpacity
-                className={`bg-[#1A744C] rounded-xl py-3.5 items-center justify-center shadow-sm mt-3 active:bg-[#135939] transition-colors ${isLoading ? 'opacity-70' : ''}`}
+                className={`bg-[#072C1E] rounded-full py-4 items-center justify-center shadow-md active:opacity-90 flex-row mt-3 ${isLoading ? 'opacity-70' : ''}`}
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
                 onPress={handleSubmit}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <Text className="text-white text-lg font-bold">
-                    {isLogin ? t('auth.loginBtn') : t('auth.signUpBtn')}
-                  </Text>
+                  <>
+                    <Text className="text-white text-sm font-bold mr-2">
+                      {isLogin ? `${t('auth.loginBtn')} to Account` : `${t('auth.signUpBtn')} Farmer Account`}
+                    </Text>
+                    <Feather name="arrow-right" size={16} color="#10B981" />
+                  </>
                 )}
               </TouchableOpacity>
             </View>
 
-            {/* Toggle Section */}
-            <View className="flex-row justify-center mt-8">
-              <Text className="text-gray-600 text-base">
+            {/* Toggle Footer */}
+            <View className="flex-row justify-center items-center mt-8 mb-4">
+              <Text className="text-gray-500 text-xs">
                 {isLogin ? t('auth.dontHaveAccount') : t('auth.alreadyHaveAccount')}
               </Text>
-              <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-                <Text className="text-[#18553F] font-bold text-base">
+              <TouchableOpacity onPress={() => setIsLogin(!isLogin)} className="ml-1">
+                <Text className="text-[#0B3D2E] font-extrabold text-xs">
                   {isLogin ? t('auth.signUpBtn') : t('auth.loginBtn')}
                 </Text>
               </TouchableOpacity>

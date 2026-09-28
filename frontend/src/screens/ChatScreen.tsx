@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, Alert, ScrollView, StatusBar as RNStatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform, KeyboardAvoidingView, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
@@ -217,8 +218,8 @@ export default function ChatScreen({
       >
         {/* Header */}
         <View
-          className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-50"
-          style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20, zIndex: 50, elevation: 5 }}
+          className="flex-row justify-between items-center px-6 pt-3 pb-2 bg-[#F5FAF6] z-50"
+          style={{ zIndex: 50, elevation: 5 }}
         >
           <View className="flex-row items-center">
             <TouchableOpacity onPress={onOpenSidebar} className="mr-3">
@@ -406,8 +407,31 @@ export default function ChatScreen({
 
       <ConvoModal 
         visible={isConvoModalVisible} 
-        onClose={() => setIsConvoModalVisible(false)} 
-        language={selectedLanguage.id} 
+        onClose={() => {
+          setIsConvoModalVisible(false);
+          if (currentSessionId) {
+            loadSessionMessages(currentSessionId);
+          }
+          if (onRefreshSessions) {
+            onRefreshSessions();
+          }
+        }} 
+        language={selectedLanguage.id}
+        user={user}
+        currentSessionId={currentSessionId}
+        onSessionUpdate={(newSessionId) => {
+          if (newSessionId && newSessionId !== currentSessionId) {
+            setCurrentSessionId(newSessionId);
+          }
+        }}
+        onMessageAdded={() => {
+          if (currentSessionId) {
+            loadSessionMessages(currentSessionId);
+          }
+          if (onRefreshSessions) {
+            onRefreshSessions();
+          }
+        }}
       />
     </SafeAreaView>
   );

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Platform, KeyboardAvoidingView, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, KeyboardAvoidingView, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useTranslation } from 'react-i18next';
-import { StatusBar as RNStatusBar } from 'react-native';
 import { BACKEND_URL } from '../config';
 
 type PestDetectionScreenProps = {
@@ -26,7 +26,7 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
   const handlePickPhoto = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
-      alert(t('pest.cameraPermissionRequired'));
+      Alert.alert(t('pest.cameraPermissionRequired') || 'Permission Required', t('pest.cameraPermissionRequired'));
       return;
     }
 
@@ -42,26 +42,35 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
     }
   };
 
-  const handlePickDocument = async () => {
+  const handlePickFromGallery = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
-        copyToCacheDirectory: true,
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          t('pest.cameraPermissionRequired') || 'Permission Required',
+          'Gallery access is required to pick images.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
       });
 
-      if (!result.canceled) {
-        const file = result.assets[0];
-        // If it's an image, show it
-        if (file.mimeType?.startsWith('image/')) {
-          setSelectedImage(file.uri);
-        } else {
-          setSelectedImage(null);
-        }
-        setSelectedFileName(file.name);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setSelectedImage(asset.uri);
+        // Extract a readable filename from the URI
+        const uriParts = asset.uri.split('/');
+        const name = asset.fileName || uriParts[uriParts.length - 1] || 'gallery_image.jpg';
+        setSelectedFileName(name);
         setDiagnosis(null);
       }
     } catch (err) {
-      console.log('Error picking document', err);
+      console.log('Error picking image from gallery:', err);
+      Alert.alert('Error', 'Could not pick the image. Please try again.');
     }
   };
 
@@ -72,40 +81,50 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
     setDiagnosis(null);
 
     try {
-      const formData = new FormData();
-
       const filename = selectedFileName || 'photo.jpg';
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      const url = `${BACKEND_URL}/disease/pest`;
+      console.log('Sending pest detection request to:', url);
+
+      let data: any;
 
       if (Platform.OS === 'web') {
+        // Web: fetch the blob and send as FormData
+        const formData = new FormData();
         const response = await fetch(selectedImage);
         const blob = await response.blob();
         formData.append('image', blob, filename);
+
+        const res = await fetch(url, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Server returned ${res.status}: ${errorText || res.statusText}`);
+        }
+        data = await res.json();
       } else {
-        formData.append('image', {
-          uri: selectedImage,
-          name: filename,
-          type: type,
-        } as any);
+        // Native (Android/iOS): use FileSystem.uploadAsync for multipart upload.
+        // ImagePicker URIs are accessible to expo-file-system (unlike DocumentPicker).
+        const uploadResult = await FileSystem.uploadAsync(url, selectedImage, {
+          fieldName: 'image',
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        if (uploadResult.status < 200 || uploadResult.status >= 300) {
+          throw new Error(`Server returned ${uploadResult.status}: ${uploadResult.body}`);
+        }
+        data = JSON.parse(uploadResult.body);
       }
 
-      const url = `${BACKEND_URL}/disease/pest`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
+      if (data && data.success) {
         const annotatedImageUri = data.image_base64 || data.image_url;
         setDiagnosis({
           title: data.disease,
@@ -113,11 +132,14 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
           annotatedImage: annotatedImageUri,
         });
       } else {
-        alert(data.error || t('pest.analysisFailed'));
+        Alert.alert('Error', data?.error || t('pest.analysisFailed'));
       }
     } catch (err: any) {
-      console.log('Error analyzing image:', err);
-      alert(t('pest.failedToConnectServer'));
+      console.error('Error analyzing image:', err);
+      Alert.alert(
+        'Connection Error',
+        `${t('pest.failedToConnectServer')}\n\n${err.message || 'Network request failed'}`
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -130,14 +152,13 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={{ height: (Platform.OS === 'web' ? '100vh' : '100%') as any }}>
+    <SafeAreaView className="flex-1 bg-[#F5FAF6]" style={Platform.OS === 'web' ? ({ height: '100vh' } as any) : undefined}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
         <View
-          className="flex-row justify-between items-center px-6 pb-2 bg-[#F5FAF6] z-10"
-          style={{ paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 0) + 12 : 20 }}
+          className="flex-row justify-between items-center px-6 pt-3 pb-2 bg-[#F5FAF6] z-10"
         >
           <TouchableOpacity onPress={onOpenSidebar}>
             <Feather name="menu" size={24} color="#18553F" />
@@ -201,9 +222,9 @@ export default function PestDetectionScreen({ onOpenSidebar }: PestDetectionScre
 
                 <TouchableOpacity
                   className="flex-1 bg-white border border-gray-200 py-3 rounded-xl items-center flex-row justify-center shadow-sm"
-                  onPress={handlePickDocument}
+                  onPress={handlePickFromGallery}
                 >
-                  <Feather name="file" size={18} color="#18553F" />
+                  <Feather name="image" size={18} color="#18553F" />
                   <Text className="ml-2 font-semibold text-gray-700">{t('pest.fileBtn')}</Text>
                 </TouchableOpacity>
               </View>

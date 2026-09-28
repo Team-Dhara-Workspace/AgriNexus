@@ -1,28 +1,31 @@
-import os 
-# pyrefly: ignore [missing-import]
-from langchain_community.document_loaders import PyPDFLoader
-# pyrefly: ignore [missing-import]
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import os
+
+try:
+    from langchain_community.document_loaders import PyPDFLoader
+except ImportError:
+    PyPDFLoader = None
+
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    RecursiveCharacterTextSplitter = None
+
 from pathlib import Path
-
-### For Embedding and Vector DB 
-# pyrefly: ignore [missing-import]
 import numpy as np
-# pyrefly: ignore [missing-import]
-from sentence_transformers import SentenceTransformer
-from typing import List, Any
+from typing import List, Dict, Any, Tuple
+import uuid
 
-# pyrefly: ignore [missing-import]
-import chromadb
-# pyrefly: ignore [missing-import]
-from chromadb.config import Settings
-import uuid 
-from typing import List , Dict , Any , Tuple
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
 
-
-from urllib3 import response
-from torch.cuda import temperature
-from typing import List , Dict , Any
+try:
+    import chromadb
+    from chromadb.config import Settings
+except ImportError:
+    chromadb = None
+    Settings = None
 
 
 def process_all_Pdfs(pdf_directory):

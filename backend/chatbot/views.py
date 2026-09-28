@@ -72,16 +72,21 @@ def rag_retrive_context_llm(query, retriver, llm, history_text="", top_k=3):
     if not context:
         print("No Relevant Context Found to Answer the Question")
     
-    prompt = f"""Use the following context and conversation history to answer the query concisely.
+    prompt = f"""You are AgriNexus, an expert agricultural advisor assisting farmers.
 
-Context: {context}
+Reference Context:
+{context if context else 'No specific document context available.'}
 
-Previous Conversation History:
+Conversation History:
 {history_text if history_text else 'No previous context.'}
 
 User Query: {query}
 
-From this context and history, structure & tweak a response based on the query. Don't add unnecessary information. Keep it helpful and direct.
+Instructions:
+- Provide a helpful, clear, and direct agricultural answer to the query.
+- Use the Reference Context when relevant.
+- If the Reference Context does not contain the answer, provide accurate advice using your general agricultural expertise.
+- NEVER say 'The provided document does not contain...' or 'Based on the text'. Answer the user's question directly and professionally with formatted Markdown where helpful.
 """
 
     response = llm.invoke([prompt])
@@ -211,6 +216,26 @@ def chat(request):
     user_msg = ChatMessage.objects.create(session=session, sender='user', text=query)
 
     try:
+        # Check for commodity price inquiry first
+        try:
+            # pyrefly: ignore [missing-import]
+            from convo.views import get_commodity_price_response
+            price_reply = get_commodity_price_response(query, lang="en", is_chat_mode=True)
+            if price_reply:
+                bot_msg = ChatMessage.objects.create(session=session, sender='bot', text=price_reply)
+                session.save()
+                return JsonResponse({
+                    "success": True,
+                    "session_id": str(session.id),
+                    "session_title": session.title,
+                    "query": query,
+                    "response": price_reply,
+                    "message_id": str(bot_msg.id),
+                    "source": "commodity_price_lookup"
+                })
+        except Exception as price_err:
+            print(f"Commodity price check error in chat: {price_err}")
+
         # Fetch previous conversation history for LLM context (last 6 messages prior to current query)
         past_msgs = session.messages.exclude(id=user_msg.id).order_by('-created_at')[:6]
         past_msgs = reversed(list(past_msgs))
@@ -290,6 +315,26 @@ def voice_chat(request):
             session.save()
 
         user_msg = ChatMessage.objects.create(session=session, sender='user', text=query)
+
+        # Check for commodity price inquiry first
+        try:
+            # pyrefly: ignore [missing-import]
+            from convo.views import get_commodity_price_response
+            price_reply = get_commodity_price_response(query, lang="en", is_chat_mode=True)
+            if price_reply:
+                bot_msg = ChatMessage.objects.create(session=session, sender='bot', text=price_reply)
+                session.save()
+                return JsonResponse({
+                    "success": True,
+                    "session_id": str(session.id),
+                    "session_title": session.title,
+                    "query": query,
+                    "response": price_reply,
+                    "message_id": str(bot_msg.id),
+                    "source": "commodity_price_lookup"
+                })
+        except Exception as price_err:
+            print(f"Commodity price check error in voice chat: {price_err}")
 
         past_msgs = session.messages.exclude(id=user_msg.id).order_by('-created_at')[:6]
         past_msgs = reversed(list(past_msgs))

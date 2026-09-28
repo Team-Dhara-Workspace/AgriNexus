@@ -1,6 +1,9 @@
 import os
+from dotenv import load_dotenv
 from groq import Groq
 from chatbot.services import RAGRetriver, VectorStore, EmbeddingManager
+
+load_dotenv()
 
 class ConversationalAI:
     def __init__(self):
@@ -58,7 +61,8 @@ class ConversationalAI:
             "Your name is AgriNexus. "
             "Keep your responses extremely concise, conversational, and natural. "
             "DO NOT use markdown formatting like asterisks or bold text, because your response will be read aloud by a text-to-speech engine. "
-            "Do not exceed 2 to 3 short sentences. Get straight to the point."
+            "Do not exceed 4 to 8 short sentences. Get straight to the point. "
+            "NEVER say 'The provided document does not contain' or 'Based on the context'. If specific documents are missing, answer directly using your agricultural knowledge."
         )
         
         # Enforce language
@@ -67,7 +71,7 @@ class ConversationalAI:
         system_prompt += f"\n\nCRITICAL INSTRUCTION: You are fully capable of speaking {target_lang}. You MUST reply exclusively in {target_lang}. Do not apologize. Do not reply in English."
         
         if context:
-            system_prompt += f"\n\nUse the following context to help answer the user if relevant. {context}"
+            system_prompt += f"\n\nUse the following reference context to help answer the user if relevant: {context}"
 
         try:
             chat_completion = self.client.chat.completions.create(
@@ -81,7 +85,7 @@ class ConversationalAI:
                         "content": user_text,
                     }
                 ],
-                model="groq/compound",
+                model="openai/gpt-oss-20b",
                 temperature=0.5,
                 max_tokens=256,
             )

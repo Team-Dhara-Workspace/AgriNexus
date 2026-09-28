@@ -178,7 +178,34 @@ def health(req):
 @csrf_exempt
 def pestDisease(request):
     if request.method == "POST":
-        if not request.FILES.get("image"):
+        image_content = None
+        filename = "uploaded_image.jpg"
+
+        if request.FILES.get("image"):
+            uploaded_file = request.FILES["image"]
+            image_content = uploaded_file.read()
+            filename = uploaded_file.name
+        else:
+            # Check JSON body or POST body for base64 image
+            import json
+            data = {}
+            try:
+                if request.body:
+                    data = json.loads(request.body.decode('utf-8'))
+            except Exception:
+                pass
+            
+            raw_base64 = data.get("image") or request.POST.get("image")
+            if raw_base64:
+                try:
+                    if "base64," in raw_base64:
+                        raw_base64 = raw_base64.split("base64,")[1]
+                    image_content = base64.b64decode(raw_base64)
+                    filename = data.get("filename") or "base64_upload.jpg"
+                except Exception as b64_err:
+                    return JsonResponse({"success": False, "error": f"Invalid base64 image data: {str(b64_err)}"}, status=400)
+
+        if not image_content:
             return JsonResponse({"success": False, "error": "No image file uploaded under key 'image'"}, status=400)
 
         try:
@@ -186,20 +213,16 @@ def pestDisease(request):
             model = YOLO(MODEL_PATH)
 
             # 1. Save uploaded file
-            uploaded_file = request.FILES["image"]
             temp_path = default_storage.save(
-                "uploads/" + uploaded_file.name,
-                ContentFile(uploaded_file.read())
+                "uploads/" + filename,
+                ContentFile(image_content)
             )
             input_path = os.path.join(settings.MEDIA_ROOT, temp_path)
 
             # 2. Run YOLOv8 inference
             results = model.predict(
                 source=input_path,
-                save=True,  # save annotated image(s)
-                project=os.path.join(settings.MEDIA_ROOT, "results"),
-                name="exp",   # folder name under project
-                exist_ok=True # reuse "exp" instead of exp2, exp3...
+                save=False,  # we'll render the annotated image ourselves via plot()
             )
 
             # Extract predictions
@@ -217,28 +240,28 @@ def pestDisease(request):
                 "Continue standard cultural practices, irrigation, and crop monitoring."
             ])
 
-            # 3. YOLOv8 saves image in results[0].save_dir
-            output_filename = os.path.basename(input_path)
-            annotated_image_path = os.path.join(results[0].save_dir, output_filename)
-
-            # Encode the annotated image as base64 string for quick transmission
+            # Render the annotated image directly in memory using YOLO's plot()
+            # This avoids path-guessing issues with save=True and save_dir
             encoded_image = ""
             try:
-                if os.path.exists(annotated_image_path):
-                    with open(annotated_image_path, "rb") as img_file:
-                        encoded_image = base64.b64encode(img_file.read()).decode("utf-8")
+                import cv2
+                annotated_frame = results[0].plot()  # returns BGR numpy array
+                # Encode the numpy array as JPEG bytes
+                success, buffer = cv2.imencode('.jpg', annotated_frame)
+                if success:
+                    encoded_image = base64.b64encode(buffer.tobytes()).decode("utf-8")
+                else:
+                    print("Warning: cv2.imencode failed for annotated image")
             except Exception as img_err:
                 print(f"Error encoding annotated image: {img_err}")
-
-            output_url = settings.MEDIA_URL + f"results/exp/{output_filename}"
-            absolute_output_url = request.build_absolute_uri(output_url)
+                import traceback as tb
+                tb.print_exc()
 
             return JsonResponse({
                 "success": True,
                 "disease": class_name,
                 "confidence": confidence,
                 "remedies": remedies,
-                "image_url": absolute_output_url,
                 "image_base64": f"data:image/jpeg;base64,{encoded_image}" if encoded_image else None
             })
         except Exception as e:

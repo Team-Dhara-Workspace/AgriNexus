@@ -12,6 +12,10 @@ interface ConvoModalProps {
   visible: boolean;
   onClose: () => void;
   language?: string;
+  user?: { id: number; username?: string; full_name?: string } | null;
+  currentSessionId?: string | null;
+  onSessionUpdate?: (sessionId: string) => void;
+  onMessageAdded?: () => void;
 }
 
 const PulseAnimation = ({ isListening }: { isListening: boolean }) => {
@@ -73,7 +77,15 @@ const PulseAnimation = ({ isListening }: { isListening: boolean }) => {
   );
 };
 
-export default function ConvoModal({ visible, onClose, language = 'en' }: ConvoModalProps) {
+export default function ConvoModal({
+  visible,
+  onClose,
+  language = 'en',
+  user,
+  currentSessionId,
+  onSessionUpdate,
+  onMessageAdded
+}: ConvoModalProps) {
   const [convoState, setConvoState] = useState<ConvoState>('IDLE');
   const [transcription, setTranscription] = useState('');
   const [aiResponse, setAiResponse] = useState('');
@@ -178,10 +190,12 @@ export default function ConvoModal({ visible, onClose, language = 'en' }: ConvoM
         return;
       }
 
-      const response = await FileSystem.uploadAsync(`${BACKEND_URL}/convo/live-chat?lang=${language}`, uri, {
+      const uploadUrl = `${BACKEND_URL}/convo/live-chat?lang=${encodeURIComponent(language)}&user_id=${encodeURIComponent(user?.id ? String(user.id) : '')}&session_id=${encodeURIComponent(currentSessionId || '')}`;
+
+      const response = await FileSystem.uploadAsync(uploadUrl, uri, {
         fieldName: 'audio',
         httpMethod: 'POST',
-        uploadType: 1, // FileSystemUploadType.MULTIPART
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
       });
 
       const data = JSON.parse(response.body);
@@ -189,6 +203,14 @@ export default function ConvoModal({ visible, onClose, language = 'en' }: ConvoM
       if (data.success && mounted.current) {
         setTranscription(data.transcription);
         setAiResponse(data.response);
+
+        if (data.session_id && onSessionUpdate) {
+          onSessionUpdate(data.session_id);
+        }
+        if (onMessageAdded) {
+          onMessageAdded();
+        }
+
         playResponse(data.response);
       } else {
         setConvoState('IDLE');
@@ -224,6 +246,9 @@ export default function ConvoModal({ visible, onClose, language = 'en' }: ConvoM
       }
     } catch (e) {}
     setConvoState('IDLE');
+    if (onMessageAdded) {
+      onMessageAdded();
+    }
     onClose();
   };
 

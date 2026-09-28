@@ -3,7 +3,8 @@
     "home": "Home",
     "chat": "Chat",
     "market": "Market",
-    "connect": "Connect"
+    "pest": "Pest Scan",
+    "drone": "Book Drone"
   },
   "sidebar": {
     "menu": "Menu",
@@ -68,6 +69,7 @@
     "toolFarmAdvisor": "Farm Advisor",
     "toolPestScan": "Pest Scan",
     "toolMarket": "Market",
+    "toolBookDrone": "Book Drones",
     "toolArticles": "Articles",
     "farmInsights": "Farm Insights",
     "insightMarket": "Market Insight",

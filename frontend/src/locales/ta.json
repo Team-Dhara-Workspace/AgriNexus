@@ -3,7 +3,8 @@
     "home": "முகப்பு",
     "chat": "அரட்டை",
     "market": "சந்தை",
-    "connect": "இணைப்பு"
+    "pest": "பூச்சி ஸ்கேன்",
+    "drone": "ட்ரோன் முன்பதிவு"
   },
   "sidebar": {
     "menu": "பட்டியல்",
@@ -68,6 +69,7 @@
     "toolFarmAdvisor": "பண்ணை ஆலோசகர்",
     "toolPestScan": "பூச்சி ஸ்கேன்",
     "toolMarket": "சந்தை",
+    "toolBookDrone": "ட்ரோன் முன்பதிவு",
     "toolArticles": "கட்டுரைகள்",
     "farmInsights": "பண்ணை நுண்ணறிவு",
     "insightMarket": "சந்தை நுண்ணறிவு",

@@ -3,7 +3,8 @@
     "home": "होम",
     "chat": "चैट",
     "market": "बाजार",
-    "connect": "जुड़ें"
+    "pest": "कीट पहचान",
+    "drone": "ड्रोन बुकिंग"
   },
   "sidebar": {
     "menu": "मेनू",
@@ -68,6 +69,7 @@
     "toolFarmAdvisor": "कृषि सलाहकार",
     "toolPestScan": "कीट स्कैन",
     "toolMarket": "बाजार",
+    "toolBookDrone": "ड्रोन बुकिंग",
     "toolArticles": "लेख",
     "farmInsights": "खेत की जानकारी",
     "insightMarket": "बाजार की जानकारी",

@@ -3,7 +3,8 @@
     "home": "హోమ్",
     "chat": "చాట్",
     "market": "మార్కెట్",
-    "connect": "కనెక్ట్"
+    "pest": "కీటకాల స్కాన్",
+    "drone": "డ్రోన్ బుకింగ్"
   },
   "sidebar": {
     "menu": "మెనూ",
@@ -68,6 +69,7 @@
     "toolFarmAdvisor": "వ్యవసాయ సలహాదారు",
     "toolPestScan": "తెగులు స్కాన్",
     "toolMarket": "మార్కెట్",
+    "toolBookDrone": "డ్రోన్ బుకింగ్",
     "toolArticles": "వ్యాసాలు",
     "farmInsights": "వ్యవసాయ అంతర్దృష్టులు",
     "insightMarket": "మార్కెట్ అంతర్దృష్టి",

@@ -2,9 +2,14 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 // The developer machine's current local IP address as detected
-const DEV_IP = '10.16.43.111';
+const DEV_IP = '10.93.95.111';
 
 const getBackendUrl = (): string => {
+  // 1. Allow explicit environment variable override if provided
+  if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+    return process.env.EXPO_PUBLIC_BACKEND_URL;
+  }
+
   if (Platform.OS === 'web') {
     // On web, dynamically resolve to the hostname running the app
     if (typeof window !== 'undefined' && window.location) {
@@ -14,12 +19,16 @@ const getBackendUrl = (): string => {
     return 'http://localhost:8000';
   }
 
-  // On native platforms (Android/iOS), try to resolve the Expo Go development host IP.
-  // hostUri typically looks like: "10.16.43.111:8081"
-  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
+  // On native platforms (Android/iOS), resolve host from modern Expo Go or Expo Config
+  const hostUri = 
+    Constants.expoConfig?.hostUri || 
+    (Constants as any).expoGoConfig?.debuggerHost ||
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
+    (Constants as any).manifest?.debuggerHost;
+
   if (hostUri) {
     const ip = hostUri.split(':')[0];
-    if (ip) {
+    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
       return `http://${ip}:8000`;
     }
   }
@@ -30,3 +39,4 @@ const getBackendUrl = (): string => {
 
 export const BACKEND_URL = getBackendUrl();
 console.log('Backend URL set to:', BACKEND_URL);
+
